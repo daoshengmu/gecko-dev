@@ -1,0 +1,11 @@
+
+#include "nsISupports.idl"
+[scriptable, uuid(2efd97c9-7916-46a9-9362-88a5aa0e5df3)]
+interface nsITest : nsISupports
+{
+    attribute string value;
+    void writeValue(in string aPrefix);
+    long add(in long a, in long b);
+    long sub(in long a, in long b);
+    long mul(in long a, in long b);
+};
