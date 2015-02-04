@@ -1,0 +1,14 @@
+namespace mozilla {
+namespace dom {
+
+protocol PGreet
+{
+child:
+    Hello();
+
+parent:
+    World();
+};
+
+} // namespace dom
+} // namespace mozilla
