@@ -1,4 +1,7 @@
 
+// Mozilla Taipei NewHires practices
+// Reference from: https://github.com/ChunMinChang/mozDevDoc/blob/master/Creating_XPCOM_components.md
+
 #include <stdio.h>
 
 #include "nsTest.h"
@@ -83,6 +86,8 @@ NS_IMETHODIMP
 nsTest::Add( int32_t a, int32_t b, int32_t *_retVal )
 {
 	*_retVal = a + b;
+
+	printf("%d \n", *_retVal);
 	return NS_OK;
 }
 
@@ -90,6 +95,8 @@ NS_IMETHODIMP
 nsTest::Sub( int32_t a, int32_t b, int32_t *_retVal )
 {
 	*_retVal = a - b;
+
+	printf("%d \n", *_retVal);
 	return NS_OK;
 }
 
@@ -97,6 +104,8 @@ NS_IMETHODIMP
 nsTest::Mul( int32_t a, int32_t b, int32_t *_retVal )
 {
 	*_retVal = a * b;
+
+	printf("%d \n", *_retVal);
 	return NS_OK;
 }
 

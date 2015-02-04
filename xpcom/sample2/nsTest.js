@@ -11,7 +11,7 @@ myTest.prototype = {
      * .classID is required for generateNSGetFactory to work correctly.
      * Make sure this CID matches the "component" in your .manifest file.
      */
-    classID: Components.ID("{eb1e55cf-9495-44d7-8525-e4693a4bd8e9}"),
+    classID: Components.ID("{20186914-3e20-4d76-9943-32794377c9d6}"),
 
     /**
      * .classDescription and .contractID are only used for
