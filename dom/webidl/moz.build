@@ -148,6 +148,7 @@ WEBIDL_FILES = [
     'GeometryUtils.webidl',
     'GetUserMediaRequest.webidl',
     'Headers.webidl',
+    'Hello.webidl',
     'History.webidl',
     'HTMLAllCollection.webidl',
     'HTMLAnchorElement.webidl',
