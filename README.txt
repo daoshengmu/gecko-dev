@@ -1,6 +1,8 @@
 
 This is Daosheng Mu's practice gecko-dev branch. You can check the /practices folder. There are some practice examples in that folder.
 
+If you wanna know the overview of Gecko, you can find the introduction from here: https://wiki.mozilla.org/Gecko:Overview
+
 An explanation of the Mozilla Source Code Directory Structure and links to
 project pages with documentation can be found at:
 
