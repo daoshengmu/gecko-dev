@@ -1,6 +1,6 @@
 This sample refers from https://github.com/ChunMinChang/mozDevDoc/blob/master/Try_message_manager.md
 
-Copy files in ./practices/Message to ./dom/events/test
+Copy files from ./practices/Message to ./dom/events/test
 
 <pre>
 $ cd MOZ_CEN

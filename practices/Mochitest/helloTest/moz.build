@@ -1,0 +1,5 @@
+
+MOCHITEST_MANIFESTS += [
+       'test/mochitest.ini',
+]
+
