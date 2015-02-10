@@ -21,6 +21,7 @@ include protocol PFileDescriptorSet;
 include protocol PFMRadio;
 include protocol PFileSystemRequest;
 include protocol PHal;
+include protocol PHelloPlugin;
 include protocol PProcessHangMonitor;
 include protocol PImageBridge;
 include protocol PMemoryReportRequest;
@@ -365,6 +366,7 @@ prio(normal upto urgent) sync protocol PContent
     manages PFileDescriptorSet;
     manages PFMRadio;
     manages PHal;
+    manages PHelloPlugin;
     manages PMemoryReportRequest;
     manages PMobileConnection;
     manages PNecko;
@@ -663,6 +665,8 @@ parent:
     PBluetooth();
 
     PFMRadio();
+    
+    PHelloPlugin();
 
     PAsmJSCacheEntry(OpenMode openMode, WriteParams write, Principal principal);
 

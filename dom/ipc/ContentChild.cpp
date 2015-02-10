@@ -151,6 +151,7 @@
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "mozilla/dom/bluetooth/PBluetoothChild.h"
 #include "mozilla/dom/PFMRadioChild.h"
+#include "mozilla/dom/PHelloPluginChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 
 #ifdef MOZ_WEBSPEECH
@@ -1695,6 +1696,21 @@ ContentChild::DeallocPFMRadioChild(PFMRadioChild* aActor)
     NS_RUNTIMEABORT("No support for FMRadio on this platform!");
     return false;
 #endif
+}
+
+PHelloPluginChild*
+ContentChild::AllocPHelloPluginChild()
+{
+	 NS_RUNTIMEABORT("No one should be allocating PHelloPluginChild actors");
+	 return nullptr;
+}
+
+
+bool
+ContentChild::DeallocPHelloPluginChild(PHelloPluginChild* aActor)
+{
+	 delete aActor;
+	 return true;
 }
 
 PSpeechSynthesisChild*

@@ -1,9 +1,27 @@
+
+DIRS += [
+        'ipc',
+]
+    
 EXPORTS.mozilla.dom += [
     'Hello.h',
+    'HelloIPDL.h',
 ]
 UNIFIED_SOURCES += [
     'Hello.cpp',
+    'HelloIPDL.cpp',
+]
+
+
+IPDL_SOURCES += [
+    'ipc/PHelloPlugin.ipdl',
 ]
 
 FAIL_ON_WARNINGS = True
 FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '../base',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')

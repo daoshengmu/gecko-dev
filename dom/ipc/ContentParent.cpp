@@ -46,6 +46,7 @@
 #include "mozilla/dom/PContentBridgeParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
 #include "mozilla/dom/PFMRadioParent.h"
+#include "mozilla/dom/PHelloPluginParent.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/bluetooth/PBluetoothParent.h"
@@ -184,6 +185,8 @@ using namespace mozilla::system;
 #ifdef MOZ_B2G_FM
 #include "mozilla/dom/FMRadioParent.h"
 #endif
+
+#include "mozilla/dom/HelloPluginParent.h"
 
 #include "Crypto.h"
 
@@ -3685,6 +3688,19 @@ ContentParent::DeallocPFMRadioParent(PFMRadioParent* aActor)
     NS_WARNING("No support for FMRadio on this platform!");
     return false;
 #endif
+}
+
+PHelloPluginParent*
+ContentParent::AllocPHelloPluginParent()
+{
+	return new HelloPluginParent();
+}
+
+bool
+ContentParent::DeallocPHelloPluginParent(PHelloPluginParent* aActor)
+{
+	delete aActor;
+	return true;
 }
 
 asmjscache::PAsmJSCacheEntryParent*

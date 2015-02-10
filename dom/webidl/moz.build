@@ -149,6 +149,7 @@ WEBIDL_FILES = [
     'GetUserMediaRequest.webidl',
     'Headers.webidl',
     'Hello.webidl',
+    'HelloIPDL.webidl',
     'History.webidl',
     'HTMLAllCollection.webidl',
     'HTMLAnchorElement.webidl',

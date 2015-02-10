@@ -1,0 +1,21 @@
+
+include protocol PContent;
+
+namespace mozilla {
+namespace dom {
+
+async protocol PHelloPlugin
+{
+	manager PContent;
+
+child:
+	Init(nsCString pluginPath);
+	Shutdown();
+
+	 __delete__();
+parent:
+	Ready();
+};
+
+} // namespace dom
+} // namespace mozilla

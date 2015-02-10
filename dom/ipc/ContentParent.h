@@ -594,6 +594,9 @@ private:
     virtual PFMRadioParent* AllocPFMRadioParent() MOZ_OVERRIDE;
     virtual bool DeallocPFMRadioParent(PFMRadioParent* aActor) MOZ_OVERRIDE;
 
+    virtual PHelloPluginParent* AllocPHelloPluginParent() MOZ_OVERRIDE;
+    virtual bool DeallocPHelloPluginParent(PHelloPluginParent* aActor) MOZ_OVERRIDE;
+
     virtual PAsmJSCacheEntryParent* AllocPAsmJSCacheEntryParent(
                                  const asmjscache::OpenMode& aOpenMode,
                                  const asmjscache::WriteParams& aWriteParams,

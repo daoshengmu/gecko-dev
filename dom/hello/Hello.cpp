@@ -112,6 +112,7 @@ Hello::Div( int32_t a, int32_t b, ErrorResult& aRv )
 		return (double)a / b;
 	}
 
+	return 0;
 }
 
 /* static */already_AddRefed<Hello>

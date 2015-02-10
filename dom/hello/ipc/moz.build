@@ -1,0 +1,20 @@
+
+EXPORTS.mozilla.dom += [
+    'HelloPluginChild.h',
+    'HelloPluginParent.h',  
+]
+
+UNIFIED_SOURCES += [
+    'HelloPluginChild.cpp',
+    'HelloPluginParent.cpp',   
+]
+
+FAIL_ON_WARNINGS = True
+
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
