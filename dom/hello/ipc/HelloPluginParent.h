@@ -12,12 +12,19 @@ class HelloPluginParent : public PHelloPluginParent
 public:
 	HelloPluginParent() {
     // launch child plugin process
+		printf("Dad is born.");
 		MOZ_COUNT_CTOR(HelloPluginParent);
 	}
 
 	~HelloPluginParent() {
 	  MOZ_COUNT_DTOR(HelloPluginParent);
 	}
+
+	virtual PHelloPluginRequestParent*
+	AllocPHelloPluginRequestParent(const HelloPluginRequestArgs& requestType);
+
+	virtual bool
+	DeallocPHelloPluginRequestParent(PHelloPluginRequestParent* aActor);
 
 	virtual void
 	ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE {
@@ -27,12 +34,12 @@ public:
 protected:
 	bool RecvReady() {
 	//mObservers.Notify("ready for action");
-	  NS_WARNING("HelloPluginParent::RecvReady");
-	  return true;
+		printf("I receive my son's message.");
+		return true;
 	}
 };
 
-} // End of namespace mozilla
-} // End of namespace dom
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_HelloPluginParent_h

@@ -6,12 +6,11 @@
 
 #include "mozilla/dom/HelloIPDL.h"
 #include "mozilla/dom/HelloIPDLBinding.h"
+//#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/HelloPluginChild.h" // For testing IPC/IPDL
-
 
 namespace mozilla {
 namespace dom {
-
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(HelloIPDL)
@@ -54,7 +53,6 @@ HelloIPDL::SetHelloStr(const nsAString& arg)
 {
   hStr.Assign(arg);
 
-  HelloPluginChild helloChild;
   helloChild.CallDad();
 }
 
@@ -68,6 +66,8 @@ void
 HelloIPDL::SayHello(nsString& aRetVal)
 {
   aRetVal = nsString(NS_LITERAL_STRING("HelloIPDL FireFox!"));
+
+  helloChild.CallDad();
 }
 
 /* static */already_AddRefed<HelloIPDL>
@@ -86,6 +86,6 @@ HelloIPDL::Constructor(const GlobalObject& global, const nsAString& str, ErrorRe
 }
 
 
-
 } // namespace dom
 } // namespace mozilla
+

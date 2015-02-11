@@ -130,13 +130,6 @@ Hello::Constructor(const GlobalObject& global, const nsAString& str, ErrorResult
 	return obj.forget();
 }
 
-
-
-
-
-
-
-
-
 } // namespace dom
 } // namespace mozilla
+

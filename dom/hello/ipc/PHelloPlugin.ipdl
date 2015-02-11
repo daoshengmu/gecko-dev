@@ -1,12 +1,56 @@
 
 include protocol PContent;
+include protocol PHelloPluginRequest;
 
 namespace mozilla {
 namespace dom {
 
+struct EnableHelloRequestArgs
+{
+	bool bEnable;
+};
+
+/*
+struct EnableRequestArgs
+{
+  double frequency;
+};
+
+struct DisableRequestArgs
+{
+};
+
+struct SetFrequencyRequestArgs
+{
+  double frequency;
+};
+
+struct SeekRequestArgs
+{
+  //FMRadioSeekDirection direction;
+};
+
+struct CancelSeekRequestArgs
+{
+};
+
+struct EnableRDSArgs
+{
+};
+
+struct DisableRDSArgs
+{
+};*/
+
+union HelloPluginRequestArgs
+{
+	EnableHelloRequestArgs;
+};
+
 async protocol PHelloPlugin
 {
 	manager PContent;
+	manages PHelloPluginRequest;
 
 child:
 	Init(nsCString pluginPath);
@@ -15,6 +59,11 @@ child:
 	 __delete__();
 parent:
 	Ready();
+	PHelloPluginRequest(HelloPluginRequestArgs requestType);
+	
+//both:
+	//Baz();  // can be sent both ways
+	
 };
 
 } // namespace dom

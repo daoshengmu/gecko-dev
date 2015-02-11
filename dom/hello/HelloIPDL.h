@@ -11,6 +11,7 @@
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+#include "mozilla/dom/HelloPluginChild.h"
 
 struct JSContext;
 
@@ -52,6 +53,7 @@ public:
 private:
   nsCOMPtr<nsISupports> mParent;
   nsString hStr;
+  HelloPluginChild helloChild;
 };
 
 } // namespace dom

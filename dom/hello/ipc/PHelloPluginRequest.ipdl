@@ -1,0 +1,33 @@
+
+include protocol PHelloPlugin;
+
+namespace mozilla {
+namespace dom {
+
+struct HelloErrorResponse
+{
+  nsString error;
+};
+
+struct HelloSuccessResponse
+{
+};
+
+union HelloPluginResponseType
+{
+  HelloErrorResponse;
+  HelloSuccessResponse;
+};
+
+async protocol PHelloPluginRequest
+{
+	manager PHelloPlugin;
+	
+child:
+	__delete__(HelloPluginResponseType response);
+
+};
+
+} // namespace dom
+} // namespace mozilla
+

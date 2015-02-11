@@ -1,20 +1,21 @@
 
 DIRS += [
-        'ipc',
+    'ipc',
 ]
     
 EXPORTS.mozilla.dom += [
     'Hello.h',
     'HelloIPDL.h',
 ]
+
 UNIFIED_SOURCES += [
     'Hello.cpp',
     'HelloIPDL.cpp',
 ]
 
-
 IPDL_SOURCES += [
     'ipc/PHelloPlugin.ipdl',
+    'ipc/PHelloPluginRequest.ipdl',
 ]
 
 FAIL_ON_WARNINGS = True

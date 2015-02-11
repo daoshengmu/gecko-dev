@@ -13,6 +13,12 @@ class HelloPluginChild : public PHelloPluginChild
 public:
 	MOZ_IMPLICIT HelloPluginChild();
 	virtual ~HelloPluginChild();
+
+    virtual PHelloPluginRequestChild*
+	AllocPHelloPluginRequestChild(const HelloPluginRequestArgs& requestType);
+
+	virtual bool
+	DeallocPHelloPluginRequestChild(PHelloPluginRequestChild* aActor);
 	void CallDad();
 
 protected:
@@ -24,9 +30,8 @@ protected:
 //  PRLibrary* mPluginLibrary;
 };
 
-} // End of namespace mozilla
-} // End of namespace dom
-
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_HelloPluginChild_h
 
