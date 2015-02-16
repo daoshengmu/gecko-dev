@@ -9,7 +9,7 @@ In this article, I would talk about the IPDL examples to make unit tests and how
 
 First of all, open your mozconfig, and append ```ac_add_options --enable-ipdl-tests``` to enable the ipdl unit tests.
 At ```MOZ_CEN/ipc/ipdl/test/cxx```. Create a ```PTestFoo.ipdl``` file and copy the below code into your file.
-```
+```cpp
 namespace mozilla {
 namespace _ipdltest {
 
@@ -32,7 +32,7 @@ parent:
 
 ```
 Append ```pTestFoo.ipdl``` into MOZ_CEN/ipc/ipdl/test/cxx/moz.build. Like the below:
-```
+```cpp
 IPDL_SOURCES += [
     ...
     'PTestFailedCtorSub.ipdl',
@@ -53,7 +53,7 @@ After building, go to ```$OBJDIR/ipc/ipdl/_ipdlheaders/mozilla/_ipdltest``` you 
 Next, we have to add some dummy functions for ipdl unit test. 
 
 First, add these interfaces into your class ```TestFooParent``` in testFoo.h
-```
+```cpp
  static bool RunTestInProcesses() { return true; }
  static bool RunTestInThreads() { return false; }
 
@@ -61,7 +61,7 @@ First, add these interfaces into your class ```TestFooParent``` in testFoo.h
 ```
 
 Then, implement the ```Main()``` function in testFoo.cpp
-```
+```cpp
 void
 TestFooParent::Main()
 {
@@ -72,10 +72,9 @@ TestFooParent::Main()
 ```
 Finally, we implement the test code in our functions to show the results. The below code is the final version of our ```testFoo.cpp```.
 
-```
+```cpp
 #include "TestFoo.h"
 #include "IPDLUnitTests.h"      // fail etc.
-
 
 namespace mozilla {
 namespace _ipdltest {
@@ -97,7 +96,6 @@ TestFooParent::RecvWorld()
 
 	return true;
 }
-
 
 void
 TestFooParent::ActorDestroy(ActorDestroyReason aWhy)
@@ -144,7 +142,6 @@ Now, we can start to run the unit test
 $ cd $OBJDIR/dist/bin
 $ ./run-mozilla.sh ./ipdlunittest TestFoo
 </pre>
-
 You can check my source code here, https://github.com/daoshengmu/gecko-dev/tree/practice/ipc/ipdl/test/cxx.
 
 #WebIDL
@@ -155,11 +152,10 @@ To begin with, we have to discuss on IPC tabs, who is parent? and who is child? 
 
 On IPC tabs, parent is chrome process, and child is content process  (https://developer.mozilla.org/en-US/docs/IPDL/Tutorial). Therefore, when we want to send message to chrome process on the tab. We have to instance the child IPDL not the parent one. If we understood this, the experiment would be easy to be implemented.
 
-###Write IPDL plugin
+##Write IPDL plugin
 
 Firstly, create a ```PHelloPlugin.ipdl``` file at ```MOZ_CEN/dom/hello/ipc```. Add the below code into this file:
-
-```
+```cpp
 include protocol PContent;
 
 namespace mozilla {
@@ -185,7 +181,7 @@ parent:
 ```
 
 And then, append ```PHelloPlugin.ipdl``` into ```MOZ_CEN/dom/hello/moz.build```.
-```
+```cpp
 IPDL_SOURCES += [
     'ipc/PHelloPlugin.ipdl',
 ]
@@ -200,7 +196,7 @@ $ ./mach build
 Secondly, we copy and paste the source code from ```$OBJDIR/ipc/ipdl/_ipdlheaders/mozilla/dom/PHelloPluginParent.h and PHelloPluginChild.h``` to ```MOZ_CEN/dom/hello/ipc/HelloPluginParent.h, HelloPluginParent.cpp, PHelloPluginChild.h, PHelloPluginChild.cpp```.
 
 And we implement HelloPluginParent.cpp in this way to help us do the experiment
-```
+```cpp
 bool HelloPluginParent::RecvHello()
 {
 	printf("[HelloPluginParent] in RecvHello()");
@@ -213,7 +209,7 @@ bool HelloPluginParent::RecvHello()
 ```
 
 In ```HelloPluginChild.cpp```, except for the testing code, we add an interface ```void HelloPluginChild::DoStuff()``` to help us to get the function call from the browser tab. Moreover, we have to add ```ContentChild::GetSingleton()->SendPHelloPluginConstructor(this);``` in the ```HelloPlugChild``` constructor to activate the IPDL connection
-```
+```cpp
 MOZ_IMPLICIT HelloPluginChild::HelloPluginChild()
 :mActorDestroyed(false)
 {
@@ -225,10 +221,9 @@ MOZ_IMPLICIT HelloPluginChild::HelloPluginChild()
 ```
 
 The final code of ```HelloPluginChild.cpp``` is like below:
-```
+```cpp
 #include "mozilla/dom/ContentChild.h"
 #include "HelloPluginChild.h"
-//#include "mozilla/dom/HelloPluginRequestChild.h"
 
 // C++ file contents
 namespace mozilla {
@@ -285,7 +280,7 @@ MOZ_IMPLICIT HelloPluginChild::~HelloPluginChild()
 
 ```
 Then, we add the files that we use into ```MOZ_CEN/dom/hello/ipc/moz.build```. 
-```
+```cpp
 EXPORTS.mozilla.dom += [
     'HelloPluginChild.h',
     'HelloPluginParent.h',  
@@ -307,10 +302,10 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 ```
 
-### Write WebIDL
+## Write WebIDL
 
 In the final step, we start to write our WebIDL code. We create ```HelloIPDL.webidl``` in ```MOZ_CEN/dom/webidl``` and add ```HelloIPDL.webidl``` into ```MOZ_CEN/dom/webidl/moz.build```
-```
+```cpp
 HelloIPDL.webidl
 [Constructor,Constructor(DOMString str)]
 interface HelloIPDL {
@@ -334,8 +329,8 @@ $ ./mach webidl-example HelloIPDL
 
 Create and complete the HelloIPDL.cpp and HelloIPDL.h by copying and pasting the content from $OBJDIR/dom/bindings/HelloIPDL-example.cpp HelloIPDL-example.h.
 
-```
-HelloIPDL.h
+***HelloIPDL.h***
+```cpp
 #ifndef mozilla_dom_HelloIPDL_h
 #define mozilla_dom_HelloIPDL_h
 
@@ -395,8 +390,9 @@ private:
 #endif // mozilla_dom_HelloIPDL_h
 ```
 In this example, we want to emit message from child to parent when we click the button on the tab. Therefore, in the HelloIPDL::SayHello(), we instance ```HelloPluginChild``` and make it do something for us.
-```
-HelloIPDL.cpp
+
+***HelloIPDL.cpp***
+```cpp
 
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cindent: */
@@ -508,7 +504,7 @@ HelloIPDL::Constructor(const GlobalObject& global, const nsAString& str, ErrorRe
 
 ```
 Finally, we add these files into our ```MOZ_CEN/dom/hello/moz.build```
-```
+```cpp
 DIRS += [
     'ipc',
 ]
@@ -527,9 +523,9 @@ $ cd MOZ_CEN/
 $ ./mach build
 </pre>
 
-###Make a html file to demo this example.
+##Make a html file to demo this example.
 Create ```testHelloIPDL.html``` at ```MOZ_CEN``` and add code like below.
-```
+```html
 <!doctype html>
 
 <html lang="en">
