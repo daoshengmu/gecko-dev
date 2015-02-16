@@ -6,6 +6,7 @@ This sample refers from https://github.com/ChunMinChang/mozDevDoc/blob/master/Cr
 2. Enter *about:config* on URL
 3. Click the button: *I'll be careful, I promise!*
 4. Search *browser.tabs.remote.autostart* and set it to *true*
+5. In menu/preference/general, enable Enable E10S (multi-process) on the general page. 
 
 <pre>
 $ cd MOZ_CEN
