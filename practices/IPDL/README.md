@@ -43,7 +43,7 @@ Build it.
 
 After building, go to ```obj-YOUR-TARGET-XXXX/ipc/ipdl/_ipdlheaders/mozilla/_ipdltest``` you will find ```PTestFooChild.h``` and ```PTestFooParent.h```. Copy and paste the content of these files into your new files, ```testFoo.cpp``` and ```testFoo.h```, that you create at ```MOZ_CEN/ipc/ipdl/test/cxx```.
 
-And then, we have to add some dummy functions for ipdl unit test. 
+Next, we have to add some dummy functions for ipdl unit test. 
 
 First, add these interfaces into your class ```TestFooParent``` in testFoo.h
 ```
@@ -53,7 +53,7 @@ First, add these interfaces into your class ```TestFooParent``` in testFoo.h
  void Main();
 ```
 
-Following, implement the ```Main``` function in testFoo.cpp
+Then, implement the ```Main``` function in testFoo.cpp
 ```
 void
 TestFooParent::Main()
@@ -64,8 +64,84 @@ TestFooParent::Main()
 
 ```
 
+Finally, we implement the test code in our functions to show the results. The below code is the final version of our ```testFoo.cpp```.
 
-#Webidl
+```
+#include "TestFoo.h"
+#include "IPDLUnitTests.h"      // fail etc.
+
+
+namespace mozilla {
+namespace _ipdltest {
+
+void
+TestFooParent::Main()
+{
+	if ( !SendHello() )
+		fail("Sending Hello Fail.");
+}
+
+bool
+TestFooParent::RecvWorld()
+{
+	puts("[TestFooParent] in RecvWorld().");
+
+	if ( !SendHello() )
+		fail("Sending Hello Fail.");
+
+	return true;
+}
+
+
+void
+TestFooParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+}
+
+MOZ_IMPLICIT TestFooParent::TestFooParent()
+{
+    MOZ_COUNT_CTOR(TestFooParent);
+}
+
+MOZ_IMPLICIT TestFooParent::~TestFooParent()
+{
+    MOZ_COUNT_DTOR(TestFooParent);
+}
+
+bool
+TestFooChild::RecvHello()
+{
+	puts("[TestFooChild] in RecvHello().");
+
+	if ( !SendWorld() )
+		fail("Sending World Fail.");
+
+    return true;
+}
+
+MOZ_IMPLICIT TestFooChild::TestFooChild()
+{
+    MOZ_COUNT_CTOR(TestFooChild);
+}
+
+MOZ_IMPLICIT TestFooChild::~TestFooChild()
+{
+    MOZ_COUNT_DTOR(TestFooChild);
+}
+
+} // namespace _ipdltest
+} // namespace mozilla
+```
+
+Now, we can start to run the unit test
+```
+cd $OBJDIR/dist/bin
+ ./run-mozilla.sh ./ipdlunittest TestFoo
+```
+file:///home/daoshengmu/Pictures/Screenshot%20from%202015-02-16%2013:40:04.png
+
+
+#WebIDL
 
 
 #Reference:
