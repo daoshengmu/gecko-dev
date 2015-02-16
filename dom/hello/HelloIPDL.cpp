@@ -74,6 +74,12 @@ HelloIPDL::SayHello(nsString& aRetVal)
 {
   aRetVal = nsString(NS_LITERAL_STRING("HelloIPDL FireFox!"));
 
+  if ( ipdlChild )
+  {
+	  delete ipdlChild;
+	  ipdlChild = nullptr;
+  }
+
   ipdlChild = new HelloPluginChild();	// Bug: we need to find a way to delete it.
 
   if ( ipdlChild )

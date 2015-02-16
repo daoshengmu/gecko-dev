@@ -11,7 +11,7 @@
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "mozilla/dom/HelloPluginChild.h"	// For testing IPC/IPDL
+#include "mozilla/dom/HelloPluginChild.h"
 
 struct JSContext;
 

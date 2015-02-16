@@ -1,7 +1,6 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "HelloPluginChild.h"
-//#include "mozilla/dom/HelloPluginRequestChild.h"
 
 // C++ file contents
 namespace mozilla {
@@ -34,22 +33,10 @@ HelloPluginChild::RecvWorld()
 	return true;
 }
 
-//PHelloPluginRequestChild*
-//HelloPluginChild::AllocPHelloPluginRequestChild(const HelloPluginRequestArgs& requestType)
-//{
-//    return 0;
-//}
-//
-//bool
-//HelloPluginChild::DeallocPHelloPluginRequestChild(PHelloPluginRequestChild* aActor)
-//{
-//    return false;
-//}
-
 MOZ_IMPLICIT HelloPluginChild::HelloPluginChild()
 :mActorDestroyed(false)
 {
-	ContentChild::GetSingleton()->SendPHelloPluginConstructor(this); // !!!
+	ContentChild::GetSingleton()->SendPHelloPluginConstructor(this); // To activate the connection between parent/child
 
 	printf("Child is born.");
     MOZ_COUNT_CTOR(HelloPluginChild);

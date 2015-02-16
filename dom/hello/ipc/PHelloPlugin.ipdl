@@ -1,12 +1,11 @@
 
 include protocol PContent;
-//include protocol PHelloPluginRequest;
 
 namespace mozilla {
 namespace dom {
 
 
-async protocol PHelloPlugin	// We can try to replace sync to async
+async protocol PHelloPlugin
 {
 	manager PContent;
 	

@@ -64,4 +64,3 @@ MOZ_IMPLICIT TestFooChild::~TestFooChild()
 } // namespace _ipdltest
 } // namespace mozilla
 
-#include "IPDLUnitTests.h"      // fail etc.
