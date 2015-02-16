@@ -206,11 +206,104 @@ bool HelloPluginParent::RecvHello()
 }
 ```
 
-In ```HelloPluginChild.cpp```, except for the testing code, we add an interface ```void HelloPluginChild::DoStuff()``` to help us to get the function call from the browser tab.
+In ```HelloPluginChild.cpp```, except for the testing code, we add an interface ```void HelloPluginChild::DoStuff()``` to help us to get the function call from the browser tab. Moreover, we have to add ```ContentChild::GetSingleton()->SendPHelloPluginConstructor(this);``` in the ```HelloPlugChild``` constructor to activate the IPDL connection
+```
+MOZ_IMPLICIT HelloPluginChild::HelloPluginChild()
+:mActorDestroyed(false)
+{
+	ContentChild::GetSingleton()->SendPHelloPluginConstructor(this); // To activate the connection between parent/child
+
+	printf("Child is born.");
+    MOZ_COUNT_CTOR(HelloPluginChild);
+}
+```
+
+The final code of ```HelloPluginChild.cpp`` is like below:
+```
+#include "mozilla/dom/ContentChild.h"
+#include "HelloPluginChild.h"
+//#include "mozilla/dom/HelloPluginRequestChild.h"
+
+// C++ file contents
+namespace mozilla {
+namespace dom {
+
+void HelloPluginChild::DoStuff()
+{
+	printf("[HelloPluginChild] in DoStuff()");
+
+	if ( !SendHello() )
+		puts("[HelloPluginChild] in DoStuff(). Send Hello Fail");
+
+}
+
+void
+HelloPluginChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+	mActorDestroyed = true;
+}
 
 
+bool
+HelloPluginChild::RecvWorld()
+{
+	puts("[HelloPluginChild] in RecvWorld()");
 
+	if ( !SendHello() )
+		puts("[HelloPluginChild] SendHello() fail");
 
+	return true;
+}
+
+MOZ_IMPLICIT HelloPluginChild::HelloPluginChild()
+:mActorDestroyed(false)
+{
+	ContentChild::GetSingleton()->SendPHelloPluginConstructor(this); // To activate the connection between
+
+	printf("Child is born.");
+    MOZ_COUNT_CTOR(HelloPluginChild);
+}
+
+MOZ_IMPLICIT HelloPluginChild::~HelloPluginChild()
+{
+	printf("Child leaves.");
+
+	if (!mActorDestroyed) {
+		Send__delete__(this);
+	}
+
+    MOZ_COUNT_DTOR(HelloPluginChild);
+}
+
+} // namespace dom
+} // namespace mozilla
+
+```
+
+Then, we add the files that we use into ```MOZ_CEN/dom/hello/ipc/moz.build```. 
+```
+EXPORTS.mozilla.dom += [
+    'HelloPluginChild.h',
+    'HelloPluginParent.h',  
+]
+
+UNIFIED_SOURCES += [
+    'HelloPluginChild.cpp',
+    'HelloPluginParent.cpp',   
+]
+
+FAIL_ON_WARNINGS = True
+
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+```
+
+In the final step, we start to write our WebIDL code. We create ```HelloIPDL.webidl``` in ```MOZ_CEN/dom/webidl``` and add ```'HelloIPDL.webidl',``` into ```MOZ_CEN/dom/webidl/moz.build```
 
 
 #Reference:
