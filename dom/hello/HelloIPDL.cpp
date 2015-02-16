@@ -6,8 +6,7 @@
 
 #include "mozilla/dom/HelloIPDL.h"
 #include "mozilla/dom/HelloIPDLBinding.h"
-//#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/HelloPluginChild.h" // For testing IPC/IPDL
+
 
 namespace mozilla {
 namespace dom {
@@ -34,6 +33,14 @@ HelloIPDL::HelloIPDL(nsISupports* aParent, const nsAString& aStr):mParent(aParen
 HelloIPDL::~HelloIPDL()
 {
     // Add |MOZ_COUNT_DTOR(HelloIPDL);| for a non-refcounted object.
+
+//	if ( _pPluginChild )
+//	{
+//		delete _pPluginChild;
+//		_pPluginChild = nullptr;
+//	}
+
+	printf("~HelloIPDL() I am dead....");
 }
 
 JSObject*
@@ -52,8 +59,6 @@ void
 HelloIPDL::SetHelloStr(const nsAString& arg)
 {
   hStr.Assign(arg);
-
-  helloChild.CallDad();
 }
 
 void
@@ -67,13 +72,19 @@ HelloIPDL::SayHello(nsString& aRetVal)
 {
   aRetVal = nsString(NS_LITERAL_STRING("HelloIPDL FireFox!"));
 
-  helloChild.CallDad();
+  HelloPluginChild* pPluginChild = new HelloPluginChild();
+
+  if ( pPluginChild )
+  {
+	  pPluginChild->DoStuff();
+  }
+
+  printf( "[HelloIPDL] in SayHello()" );
 }
 
 /* static */already_AddRefed<HelloIPDL>
 HelloIPDL::Constructor(const GlobalObject& global, ErrorResult& aRv)
 {
-
 	nsRefPtr<HelloIPDL> obj = new HelloIPDL(global.GetAsSupports());
 	return obj.forget();
 }

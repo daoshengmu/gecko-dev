@@ -11,7 +11,7 @@
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "mozilla/dom/HelloPluginChild.h"
+#include "mozilla/dom/HelloPluginChild.h"	// For testing IPC/IPDL
 
 struct JSContext;
 
@@ -53,7 +53,7 @@ public:
 private:
   nsCOMPtr<nsISupports> mParent;
   nsString hStr;
-  HelloPluginChild helloChild;
+
 };
 
 } // namespace dom

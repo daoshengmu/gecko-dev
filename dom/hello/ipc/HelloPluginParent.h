@@ -10,7 +10,7 @@ namespace dom {
 class HelloPluginParent : public PHelloPluginParent
 {
 public:
-	HelloPluginParent() {
+	HelloPluginParent(): mActorDestroyed(false) {
     // launch child plugin process
 		printf("Dad is born.");
 		MOZ_COUNT_CTOR(HelloPluginParent);
@@ -18,25 +18,32 @@ public:
 
 	~HelloPluginParent() {
 	  MOZ_COUNT_DTOR(HelloPluginParent);
+
+	  if (!mActorDestroyed) {
+
+	  }
 	}
 
-	virtual PHelloPluginRequestParent*
-	AllocPHelloPluginRequestParent(const HelloPluginRequestArgs& requestType);
+//	void DoStuff();
 
-	virtual bool
-	DeallocPHelloPluginRequestParent(PHelloPluginRequestParent* aActor);
+	bool RecvHello();
+
+//	virtual bool
+//	RecvReady();
+
+//	virtual PHelloPluginRequestParent*
+//	AllocPHelloPluginRequestParent(const HelloPluginRequestArgs& requestType);
+//
+//	virtual bool
+//	DeallocPHelloPluginRequestParent(PHelloPluginRequestParent* aActor);
 
 	virtual void
 	ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE {
-
+		mActorDestroyed = true;
 	}
 
-protected:
-	bool RecvReady() {
-	//mObservers.Notify("ready for action");
-		printf("I receive my son's message.");
-		return true;
-	}
+private:
+	bool mActorDestroyed;
 };
 
 } // namespace dom

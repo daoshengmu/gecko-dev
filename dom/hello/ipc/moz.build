@@ -2,15 +2,15 @@
 EXPORTS.mozilla.dom += [
 	'HelloPluginChild.h',
     'HelloPluginParent.h', 
-    'HelloPluginRequestChild.h',
-    'HelloPluginRequestParent.h',  
+  #  'HelloPluginRequestChild.h',
+  #  'HelloPluginRequestParent.h',  
 ]
 
 UNIFIED_SOURCES += [
     'HelloPluginChild.cpp',
     'HelloPluginParent.cpp',   
-    'HelloPluginRequestChild.cpp',
-    'HelloPluginRequestParent.cpp',   
+   # 'HelloPluginRequestChild.cpp',
+   # 'HelloPluginRequestParent.cpp',   
 ]
 
 FAIL_ON_WARNINGS = True

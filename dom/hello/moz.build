@@ -15,7 +15,7 @@ UNIFIED_SOURCES += [
 
 IPDL_SOURCES += [
     'ipc/PHelloPlugin.ipdl',
-    'ipc/PHelloPluginRequest.ipdl',
+  #  'ipc/PHelloPluginRequest.ipdl',
 ]
 
 FAIL_ON_WARNINGS = True

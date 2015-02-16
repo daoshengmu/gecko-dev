@@ -14,20 +14,30 @@ public:
 	MOZ_IMPLICIT HelloPluginChild();
 	virtual ~HelloPluginChild();
 
-    virtual PHelloPluginRequestChild*
-	AllocPHelloPluginRequestChild(const HelloPluginRequestArgs& requestType);
+//    virtual PHelloPluginRequestChild*
+//	AllocPHelloPluginRequestChild(const HelloPluginRequestArgs& requestType);
+//
+//	virtual bool
+//	DeallocPHelloPluginRequestChild(PHelloPluginRequestChild* aActor);
 
-	virtual bool
-	DeallocPHelloPluginRequestChild(PHelloPluginRequestChild* aActor);
-	void CallDad();
+	void
+	DoStuff();
 
-protected:
-	virtual bool RecvInit(const nsCString& pluginPath);
+	void
+	ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
-	virtual bool RecvShutdown();
+	bool
+	RecvWorld();
+
+//protected:
+//	virtual bool RecvInit(const nsCString& pluginPath);
+//
+//	virtual bool RecvShutdown();
 //
 //private:
 //  PRLibrary* mPluginLibrary;
+private:
+	bool mActorDestroyed;
 };
 
 } // namespace dom

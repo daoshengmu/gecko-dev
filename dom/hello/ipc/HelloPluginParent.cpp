@@ -1,20 +1,38 @@
 #include "HelloPluginParent.h"
-#include "mozilla/dom/HelloPluginRequestParent.h"
+//#include "mozilla/dom/HelloPluginRequestParent.h"
 
 namespace mozilla {
 namespace dom {
 
-PHelloPluginRequestParent*
-HelloPluginParent::AllocPHelloPluginRequestParent(const HelloPluginRequestArgs& requestType)
+//PHelloPluginRequestParent*
+//HelloPluginParent::AllocPHelloPluginRequestParent(const HelloPluginRequestArgs& requestType)
+//{
+//    return 0;
+//}
+//
+//bool
+//HelloPluginParent::DeallocPHelloPluginRequestParent(PHelloPluginRequestParent* aActor)
+//{
+//    return false;
+//}
+
+
+bool HelloPluginParent::RecvHello()
 {
-    return 0;
+	printf("[HelloPluginParent] in RecvHello()");
+
+	if ( !SendWorld() )
+		puts("[HelloPluginParent] SendWorld() fail");
+
+	return true;
 }
 
-bool
-HelloPluginParent::DeallocPHelloPluginRequestParent(PHelloPluginRequestParent* aActor)
-{
-    return false;
-}
+//bool
+//HelloPluginParent::RecvReady()
+//{
+//	printf("I receive my son's message.");
+//    return true;
+//}
 
 } // namespace dom
 } // namespace mozilla
