@@ -27,7 +27,7 @@ parent:
 } // namespace mozilla
 
 ```
-Append ```pTestFoo.ipdl``` into moz.build. Like the below:
+Append ```pTestFoo.ipdl``` into MOZ_CEN/ipc/ipdl/test/cxx/moz.build. Like the below:
 ```
 IPDL_SOURCES += [
     ...
@@ -138,11 +138,20 @@ Now, we can start to run the unit test
 cd $OBJDIR/dist/bin
  ./run-mozilla.sh ./ipdlunittest TestFoo
 ```
-file:///home/daoshengmu/Pictures/Screenshot%20from%202015-02-16%2013:40:04.png
 
 
 #WebIDL
 
+In this WebIDL experiment, we want to show how to communicate between the content process and the chrome process on IPC tabs.
+
+To begin with, we have to discuss on IPC tabs, who is parent? and who is child? Because they have different authority between them. If we gave them the wrong one, we couldn't succeed our experiment.
+
+On IPC tabs, parent is chrome process, and child is content process  (https://developer.mozilla.org/en-US/docs/IPDL/Tutorial). Therefore, when we want to send message to chrome process on the tab. We have to instance the child IPDL not the parent one. If we understood it, the experiment would be easy to be implemented.
+
+
+
 
 #Reference:
 IPDL unit test, https://wiki.mozilla.org/IPDL/Unit_test_generation
+IPDL tutorial, https://developer.mozilla.org/en-US/docs/IPDL/Tutorial
+
