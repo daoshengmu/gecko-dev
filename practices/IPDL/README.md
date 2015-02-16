@@ -1,4 +1,6 @@
 
+#Introduction
+
 This sample refers from https://github.com/ChunMinChang/mozDevDoc/blob/master/Creating_a_IPDL.md
 
 In this article, I would talk about the IPDL examples to make unit tests and how to use IPDL on Firefox browser tab. 
@@ -6,7 +8,7 @@ In this article, I would talk about the IPDL examples to make unit tests and how
 #Unit test
 
 First of all, open your mozconfig, and append ```ac_add_options --enable-ipdl-tests``` to enable the ipdl unit tests.
-At MOZ_CEN/ipc/ipdl/test/cxx. Create a pTestFoo.ipdl file and copy the below code into your file.
+At ```MOZ_CEN/ipc/ipdl/test/cxx```. Create a ```PTestFoo.ipdl``` file and copy the below code into your file.
 ```
 namespace mozilla {
 namespace _ipdltest {
@@ -41,6 +43,10 @@ IPDL_SOURCES += [
 ]
 ```
 Build it.
+<pre>
+$ cd MOZ_CEN/
+$ ./mach build
+</pre>
 
 After building, go to ```$OBJDIR/ipc/ipdl/_ipdlheaders/mozilla/_ipdltest``` you will find ```PTestFooChild.h``` and ```PTestFooParent.h```. Copy and paste the content of these files into your new files, ```testFoo.cpp``` and ```testFoo.h```, that you create at ```MOZ_CEN/ipc/ipdl/test/cxx```.
 
@@ -54,7 +60,7 @@ First, add these interfaces into your class ```TestFooParent``` in testFoo.h
  void Main();
 ```
 
-Then, implement the ```Main``` function in testFoo.cpp
+Then, implement the ```Main()``` function in testFoo.cpp
 ```
 void
 TestFooParent::Main()
@@ -139,7 +145,7 @@ $ cd $OBJDIR/dist/bin
 $ ./run-mozilla.sh ./ipdlunittest TestFoo
 </pre>
 
-You can check my source code here, https://github.com/daoshengmu/gecko-dev/tree/practice/ipc/ipdl/test/cxx .
+You can check my source code here, https://github.com/daoshengmu/gecko-dev/tree/practice/ipc/ipdl/test/cxx.
 
 #WebIDL
 
@@ -148,6 +154,8 @@ In this WebIDL experiment, we want to show how to communicate between the conten
 To begin with, we have to discuss on IPC tabs, who is parent? and who is child? Because they have different authority between them. If we gave them the wrong one, we couldn't achieve our expectation.
 
 On IPC tabs, parent is chrome process, and child is content process  (https://developer.mozilla.org/en-US/docs/IPDL/Tutorial). Therefore, when we want to send message to chrome process on the tab. We have to instance the child IPDL not the parent one. If we understood this, the experiment would be easy to be implemented.
+
+###Write IPDL plugin
 
 Firstly, create a ```PHelloPlugin.ipdl``` file at ```MOZ_CEN/dom/hello/ipc```. Add the below code into this file:
 
@@ -241,7 +249,6 @@ HelloPluginChild::ActorDestroy(ActorDestroyReason aWhy)
 	mActorDestroyed = true;
 }
 
-
 bool
 HelloPluginChild::RecvWorld()
 {
@@ -300,7 +307,9 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 ```
 
-In the final step, we start to write our WebIDL code. We create ```HelloIPDL.webidl``` in ```MOZ_CEN/dom/webidl``` and add ```HelloIPDL.webidl,``` into ```MOZ_CEN/dom/webidl/moz.build```
+### Write WebIDL
+
+In the final step, we start to write our WebIDL code. We create ```HelloIPDL.webidl``` in ```MOZ_CEN/dom/webidl``` and add ```HelloIPDL.webidl``` into ```MOZ_CEN/dom/webidl/moz.build```
 ```
 HelloIPDL.webidl
 [Constructor,Constructor(DOMString str)]
@@ -316,7 +325,8 @@ After writing the WebIDL file, we rebuild our backend
 # Build backend : Generate a backend used to build the tree.
 $ cd MOZ_CEN/
 $ ./mach build-backend
-<pre>
+</pre>
+
 And generate the template file (cpp, h) 
 <pre>
 $ ./mach webidl-example HelloIPDL
@@ -498,7 +508,6 @@ HelloIPDL::Constructor(const GlobalObject& global, const nsAString& str, ErrorRe
 
 ```
 Finally, we add these files into our ```MOZ_CEN/dom/hello/moz.build```
-
 ```
 DIRS += [
     'ipc',
@@ -518,7 +527,7 @@ $ cd MOZ_CEN/
 $ ./mach build
 </pre>
 
-###Make a html file to demo the example.
+###Make a html file to demo this example.
 Create ```testHelloIPDL.html``` at ```MOZ_CEN``` and add code like below.
 ```
 <!doctype html>
@@ -554,11 +563,14 @@ Create ```testHelloIPDL.html``` at ```MOZ_CEN``` and add code like below.
 </body>
 </html>
 ```
-### Demo it
+Demo it.
 <pre>
 $ cd MOZ_CEN/
 $ ./mach run testHelloIPDL.html
 </pre>
+
+You can check my source code here, https://github.com/daoshengmu/gecko-dev/tree/practice/dom/hello and 
+https://github.com/daoshengmu/gecko-dev/tree/practice/dom/webidl.
 
 #Reference:
 IPDL unit test, https://wiki.mozilla.org/IPDL/Unit_test_generation
