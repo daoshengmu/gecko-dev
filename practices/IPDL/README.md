@@ -259,8 +259,9 @@ HelloPluginChild::RecvWorld()
 MOZ_IMPLICIT HelloPluginChild::HelloPluginChild()
 :mActorDestroyed(false)
 {
-	ContentChild::GetSingleton()->SendPHelloPluginConstructor(this); // To activate the connection between
-
+	// To activate the connection between parent/child
+	ContentChild::GetSingleton()->SendPHelloPluginConstructor(this); 
+	
 	printf("Child is born.");
     MOZ_COUNT_CTOR(HelloPluginChild);
 }
