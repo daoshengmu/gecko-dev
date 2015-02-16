@@ -1,6 +1,8 @@
 
 This sample refers from https://github.com/ChunMinChang/mozDevDoc/blob/master/Creating_a_IPDL.md
 
+In this article, I would talk about the IPDL examples to make unit tests and how to use IPDL on Firefox browser tab. 
+
 #Unit test
 
 First of all, open your mozconfig, and append ```ac_add_options --enable-ipdl-tests``` to enable the ipdl unit tests.
@@ -139,14 +141,74 @@ cd $OBJDIR/dist/bin
  ./run-mozilla.sh ./ipdlunittest TestFoo
 ```
 
+You can check my source code here, https://github.com/daoshengmu/gecko-dev/tree/practice/ipc/ipdl/test/cxx .
 
 #WebIDL
 
 In this WebIDL experiment, we want to show how to communicate between the content process and the chrome process on IPC tabs.
 
-To begin with, we have to discuss on IPC tabs, who is parent? and who is child? Because they have different authority between them. If we gave them the wrong one, we couldn't succeed our experiment.
+To begin with, we have to discuss on IPC tabs, who is parent? and who is child? Because they have different authority between them. If we gave them the wrong one, we couldn't achieve our expectation.
 
-On IPC tabs, parent is chrome process, and child is content process  (https://developer.mozilla.org/en-US/docs/IPDL/Tutorial). Therefore, when we want to send message to chrome process on the tab. We have to instance the child IPDL not the parent one. If we understood it, the experiment would be easy to be implemented.
+On IPC tabs, parent is chrome process, and child is content process  (https://developer.mozilla.org/en-US/docs/IPDL/Tutorial). Therefore, when we want to send message to chrome process on the tab. We have to instance the child IPDL not the parent one. If we understood this, the experiment would be easy to be implemented.
+
+Firstly, create a ```PHelloPlugin.ipdl``` file at ```MOZ_CEN/dom/hello/ipc```. Add the below code into this file:
+
+```
+include protocol PContent;
+
+namespace mozilla {
+namespace dom {
+
+async protocol PHelloPlugin
+{
+	manager PContent;
+	
+child:
+	
+	World();	
+	
+parent:
+
+	Hello();
+	 __delete__();	
+	
+};
+
+} // namespace dom
+} // namespace mozilla
+```
+
+And then, append ```PHelloPlugin.ipdl``` into ```MOZ_CEN/dom/hello/moz.build```.
+```
+IPDL_SOURCES += [
+    'ipc/PHelloPlugin.ipdl',
+]
+```
+
+Build it.
+```
+cd MOZ_CEN/
+./mach build
+```
+
+Secondly, we copy and paste the source code from ```obj-YOUR-TARGET-XXXX/ipc/ipdl/_ipdlheaders/mozilla/dom/PHelloPluginParent.h and PHelloPluginChild.h``` to ```MOZ_CEN/dom/hello/ipc/HelloPluginParent.h, HelloPluginParent.cpp, PHelloPluginChild.h, PHelloPluginChild.cpp```.
+
+And we implement HelloPluginParent.cpp in this way to help us do the experiment
+```
+bool HelloPluginParent::RecvHello()
+{
+	printf("[HelloPluginParent] in RecvHello()");
+
+	if ( !SendWorld() )
+		puts("[HelloPluginParent] SendWorld() fail");
+
+	return true;
+}
+```
+
+In ```HelloPluginChild.cpp```, except for the testing code, we add an interface ```void HelloPluginChild::DoStuff()``` to help us to get the function call from the browser tab.
+
+
 
 
 
