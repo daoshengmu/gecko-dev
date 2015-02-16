@@ -15,7 +15,7 @@ If your test code that is generated from ```mochitest/gen_template.pl```, you ha
 $ vim MOZ_CEN/dom/moz.build
 </pre> 
 
-<pre>
+```cpp
 DIRS += [
     'animation',
     'apps',
@@ -25,7 +25,7 @@ DIRS += [
     'vr',
     'helloTest',
 ]
-...
+```
 ...
 </pre> 
 
