@@ -5,65 +5,19 @@ include protocol PContent;
 namespace mozilla {
 namespace dom {
 
-/*
-struct EnableHelloRequestArgs
-{
-	bool bEnable;
-};
-
-struct EnableRequestArgs
-{
-  double frequency;
-};
-
-struct DisableRequestArgs
-{
-};
-
-struct SetFrequencyRequestArgs
-{
-  double frequency;
-};
-
-struct SeekRequestArgs
-{
-  //FMRadioSeekDirection direction;
-};
-
-struct CancelSeekRequestArgs
-{
-};
-
-struct EnableRDSArgs
-{
-};
-
-struct DisableRDSArgs
-{
-};
-
-union HelloPluginRequestArgs
-{
-	EnableHelloRequestArgs;
-};*/
 
 async protocol PHelloPlugin	// We can try to replace sync to async
 {
 	manager PContent;
-	//manages PHelloPluginRequest;
-
+	
 child:
 	
-	World();
+	World();	
 	
 parent:
 
 	Hello();
-
-	 __delete__();
-	
-	//PHelloPluginRequest(HelloPluginRequestArgs requestType);
-
+	 __delete__();	
 	
 };
 

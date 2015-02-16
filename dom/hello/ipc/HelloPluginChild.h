@@ -29,13 +29,6 @@ public:
 	bool
 	RecvWorld();
 
-//protected:
-//	virtual bool RecvInit(const nsCString& pluginPath);
-//
-//	virtual bool RecvShutdown();
-//
-//private:
-//  PRLibrary* mPluginLibrary;
 private:
 	bool mActorDestroyed;
 };

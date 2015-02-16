@@ -54,6 +54,7 @@ private:
   nsCOMPtr<nsISupports> mParent;
   nsString hStr;
 
+  HelloPluginChild* ipdlChild;
 };
 
 } // namespace dom

@@ -22,23 +22,25 @@ NS_INTERFACE_MAP_END
 
 //HelloIPDL::HelloIPDL()
 //{}
-HelloIPDL::HelloIPDL(nsISupports* aParent):mParent(aParent)
+HelloIPDL::HelloIPDL(nsISupports* aParent):mParent(aParent), ipdlChild(nullptr)
 {
+
 }
 
-HelloIPDL::HelloIPDL(nsISupports* aParent, const nsAString& aStr):mParent(aParent), hStr(aStr)
+HelloIPDL::HelloIPDL(nsISupports* aParent, const nsAString& aStr):mParent(aParent), hStr(aStr), ipdlChild(nullptr)
 {
+
 }
 
 HelloIPDL::~HelloIPDL()
 {
     // Add |MOZ_COUNT_DTOR(HelloIPDL);| for a non-refcounted object.
 
-//	if ( _pPluginChild )
-//	{
-//		delete _pPluginChild;
-//		_pPluginChild = nullptr;
-//	}
+	if ( ipdlChild )
+	{
+		//delete ipdlChild;	// Bug: it will cause the send/recv connection error.
+		//ipdlChild = nullptr;
+	}
 
 	printf("~HelloIPDL() I am dead....");
 }
@@ -72,11 +74,11 @@ HelloIPDL::SayHello(nsString& aRetVal)
 {
   aRetVal = nsString(NS_LITERAL_STRING("HelloIPDL FireFox!"));
 
-  HelloPluginChild* pPluginChild = new HelloPluginChild();
+  ipdlChild = new HelloPluginChild();	// Bug: we need to find a way to delete it.
 
-  if ( pPluginChild )
+  if ( ipdlChild )
   {
-	  pPluginChild->DoStuff();
+	  ipdlChild->DoStuff();
   }
 
   printf( "[HelloIPDL] in SayHello()" );

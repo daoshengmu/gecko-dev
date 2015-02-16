@@ -27,12 +27,6 @@ bool HelloPluginParent::RecvHello()
 	return true;
 }
 
-//bool
-//HelloPluginParent::RecvReady()
-//{
-//	printf("I receive my son's message.");
-//    return true;
-//}
 
 } // namespace dom
 } // namespace mozilla

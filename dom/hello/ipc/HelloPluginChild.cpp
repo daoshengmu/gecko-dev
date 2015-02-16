@@ -7,15 +7,6 @@
 namespace mozilla {
 namespace dom {
 
-
-//bool
-//HelloPluginChild::RecvInit(const nsCString& pluginPath)
-//{
-//	printf("[HelloPluginChild] in RecvInit()");
-//	//SendReady();
-//    return false;
-//}
-
 void HelloPluginChild::DoStuff()
 {
 	printf("[HelloPluginChild] in DoStuff()");
@@ -54,13 +45,6 @@ HelloPluginChild::RecvWorld()
 //{
 //    return false;
 //}
-//
-//bool
-//HelloPluginChild::RecvShutdown()
-//{
-//	printf("Bye! Dad.");
-//    return false;
-//}
 
 MOZ_IMPLICIT HelloPluginChild::HelloPluginChild()
 :mActorDestroyed(false)
@@ -74,11 +58,12 @@ MOZ_IMPLICIT HelloPluginChild::HelloPluginChild()
 MOZ_IMPLICIT HelloPluginChild::~HelloPluginChild()
 {
 	printf("Child leaves.");
-    MOZ_COUNT_DTOR(HelloPluginChild);
 
-    if (!mActorDestroyed) {
-   //    Send__delete__(this);
-    }
+	if (!mActorDestroyed) {
+		Send__delete__(this);
+	}
+
+    MOZ_COUNT_DTOR(HelloPluginChild);
 }
 
 } // namespace dom

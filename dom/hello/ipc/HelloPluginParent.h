@@ -24,12 +24,7 @@ public:
 	  }
 	}
 
-//	void DoStuff();
-
 	bool RecvHello();
-
-//	virtual bool
-//	RecvReady();
 
 //	virtual PHelloPluginRequestParent*
 //	AllocPHelloPluginRequestParent(const HelloPluginRequestArgs& requestType);
