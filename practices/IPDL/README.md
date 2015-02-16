@@ -213,7 +213,8 @@ In ```HelloPluginChild.cpp```, except for the testing code, we add an interface 
 MOZ_IMPLICIT HelloPluginChild::HelloPluginChild()
 :mActorDestroyed(false)
 {
-	ContentChild::GetSingleton()->SendPHelloPluginConstructor(this); // To activate the connection between parent/child
+	// To activate the connection between parent/child
+	ContentChild::GetSingleton()->SendPHelloPluginConstructor(this); 
 
 	printf("Child is born.");
     MOZ_COUNT_CTOR(HelloPluginChild);
