@@ -571,6 +571,7 @@ You can check my source code here, https://github.com/daoshengmu/gecko-dev/tree/
 https://github.com/daoshengmu/gecko-dev/tree/practice/dom/webidl.
 
 #Reference:
-IPDL unit test, https://wiki.mozilla.org/IPDL/Unit_test_generation
-IPDL tutorial, https://developer.mozilla.org/en-US/docs/IPDL/Tutorial
+IPDL unit test, https://wiki.mozilla.org/IPDL/Unit_test_generation.
+
+IPDL tutorial, https://developer.mozilla.org/en-US/docs/IPDL/Tutorial.
 
