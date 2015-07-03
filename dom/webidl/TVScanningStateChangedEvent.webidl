@@ -19,9 +19,10 @@ dictionary TVScanningStateChangedEventInit : EventInit {
   TVChannel? channel = null;
 };
 
-[Pref="dom.tv.enabled",
- CheckPermissions="tv",
- Func="Navigator::HasTVSupport",
+// For TV media stream experiment.
+[//Pref="dom.tv.enabled",
+ //CheckPermissions="tv",
+ //Func="Navigator::HasTVSupport",
  Constructor(DOMString type, optional TVScanningStateChangedEventInit eventInitDict)]
 interface TVScanningStateChangedEvent : Event {
   readonly attribute TVScanningState state;

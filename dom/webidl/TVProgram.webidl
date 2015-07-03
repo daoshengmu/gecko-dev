@@ -7,7 +7,8 @@
  * http://seanyhlin.github.io/TV-Manager-API/
  */
 
-[Pref="dom.tv.enabled", CheckPermissions="tv", Func="Navigator::HasTVSupport"]
+// For TV media stream experiment.
+//[Pref="dom.tv.enabled", CheckPermissions="tv", Func="Navigator::HasTVSupport"]
 interface TVProgram {
   sequence<DOMString> getAudioLanguages();
 

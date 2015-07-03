@@ -11,9 +11,10 @@ dictionary TVCurrentSourceChangedEventInit : EventInit {
   TVSource? source = null;
 };
 
-[Pref="dom.tv.enabled",
- CheckPermissions="tv",
- Func="Navigator::HasTVSupport",
+// For TV media stream experiment.
+[//Pref="dom.tv.enabled",
+ //CheckPermissions="tv",
+ //Func="Navigator::HasTVSupport",
  Constructor(DOMString type, optional TVCurrentSourceChangedEventInit eventInitDict)]
 interface TVCurrentSourceChangedEvent : Event {
   readonly attribute TVSource? source;

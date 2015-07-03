@@ -416,7 +416,8 @@ partial interface Navigator {
 };
 
 partial interface Navigator {
-  [Pref="dom.tv.enabled", CheckPermissions="tv", Func="Navigator::HasTVSupport"]
+	// For TV media stream experiment.
+	//[Pref="dom.tv.enabled", CheckPermissions="tv", Func="Navigator::HasTVSupport"]
   readonly attribute TVManager? tv;
 };
 

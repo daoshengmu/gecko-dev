@@ -11,9 +11,10 @@ dictionary TVEITBroadcastedEventInit : EventInit {
   sequence<TVProgram> programs = [];
 };
 
-[Pref="dom.tv.enabled",
- CheckPermissions="tv",
- Func="Navigator::HasTVSupport",
+// For TV media stream experiment.
+[//Pref="dom.tv.enabled",
+ //CheckPermissions="tv",
+ //Func="Navigator::HasTVSupport",
  Constructor(DOMString type, optional TVEITBroadcastedEventInit eventInitDict)]
 interface TVEITBroadcastedEvent : Event {
   [Pure, Cached] readonly attribute sequence<TVProgram> programs;
