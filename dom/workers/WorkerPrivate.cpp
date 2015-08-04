@@ -59,6 +59,8 @@
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/MessagePortList.h"
+#include "mozilla/dom/OffscreenCanvas.h"
+#include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseDebugging.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -717,12 +719,11 @@ struct WorkerStructuredCloneCallbacks
                uint32_t aTag, void* aContent, uint64_t aExtraData,
                void* aClosure, JS::MutableHandle<JSObject*> aReturnObject)
   {
-    MOZ_ASSERT(aClosure);
-
-    auto* closure = static_cast<WorkerStructuredCloneClosure*>(aClosure);
-
     if (aTag == SCTAG_DOM_MAP_MESSAGEPORT) {
       MOZ_ASSERT(!aContent);
+      MOZ_ASSERT(aClosure);
+      auto* closure = static_cast<WorkerStructuredCloneClosure*>(aClosure);
+
       MOZ_ASSERT(aExtraData < closure->mMessagePortIdentifiers.Length());
 
       ErrorResult rv;
@@ -739,6 +740,21 @@ struct WorkerStructuredCloneCallbacks
 
       JS::Rooted<JS::Value> value(aCx);
       if (!GetOrCreateDOMReflector(aCx, port, &value)) {
+        JS_ClearPendingException(aCx);
+        return false;
+      }
+
+      aReturnObject.set(&value.toObject());
+      return true;
+    } else if (aTag == DOMWORKER_SCTAG_CANVAS) {
+      MOZ_ASSERT(aContent);
+      OffscreenCanvasCloneData* data =
+        static_cast<OffscreenCanvasCloneData*>(aContent);
+      nsRefPtr<OffscreenCanvas> canvas = OffscreenCanvas::CreateFromCloneData(data);
+      delete data;
+
+      JS::Rooted<JS::Value> value(aCx);
+      if (!GetOrCreateDOMReflector(aCx, canvas, &value)) {
         JS_ClearPendingException(aCx);
         return false;
       }
@@ -783,6 +799,18 @@ struct WorkerStructuredCloneCallbacks
       return true;
     }
 
+    OffscreenCanvas* canvas = nullptr;
+    rv = UNWRAP_OBJECT(OffscreenCanvas, aObj, canvas);
+    if (NS_SUCCEEDED(rv)) {
+      MOZ_ASSERT(canvas);
+      *aTag = DOMWORKER_SCTAG_CANVAS;
+      *aContent = canvas->ToCloneData();
+      canvas->SetNeutered();
+      *aExtraData = 0;
+      *aOwnership = JS::SCTAG_TMO_CUSTOM;
+      return true;
+    }
+
     return false;
   }
 
@@ -797,6 +825,10 @@ struct WorkerStructuredCloneCallbacks
 
       MOZ_ASSERT(aExtraData < closure->mMessagePortIdentifiers.Length());
       dom::MessagePort::ForceClose(closure->mMessagePortIdentifiers[aExtraData]);
+    } else if (aTag == DOMWORKER_SCTAG_CANVAS) {
+      OffscreenCanvasCloneData* data =
+        static_cast<OffscreenCanvasCloneData*>(aContent);
+      delete data;
     }
   }
 };
@@ -1299,8 +1331,10 @@ class MessageEventRunnable final : public WorkerRunnable
 public:
   MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                        TargetAndBusyBehavior aBehavior,
-                       bool aToMessagePort, uint64_t aMessagePortSerial)
+                       bool aToMessagePort, uint64_t aMessagePortSerial,
+                       const JSStructuredCloneCallbacks *aCallbacks)
   : WorkerRunnable(aWorkerPrivate, aBehavior)
+  , mBuffer(aCallbacks, nullptr)
   , mMessagePortSerial(aMessagePortSerial)
   , mToMessagePort(aToMessagePort)
   {
@@ -3552,7 +3586,7 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
   nsRefPtr<MessageEventRunnable> runnable =
     new MessageEventRunnable(ParentAsWorkerPrivate(),
                              WorkerRunnable::WorkerThreadModifyBusyCount,
-                             aToMessagePort, aMessagePortSerial);
+                             aToMessagePort, aMessagePortSerial, callbacks);
 
   if (!runnable->Write(aCx, aMessage, transferable, callbacks)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
@@ -6404,7 +6438,7 @@ WorkerPrivate::PostMessageToParentInternal(
   nsRefPtr<MessageEventRunnable> runnable =
     new MessageEventRunnable(this,
                              WorkerRunnable::ParentThreadUnchangedBusyCount,
-                             aToMessagePort, aMessagePortSerial);
+                             aToMessagePort, aMessagePortSerial, callbacks);
 
   if (!runnable->Write(aCx, aMessage, transferable, callbacks)) {
     aRv = NS_ERROR_DOM_DATA_CLONE_ERR;

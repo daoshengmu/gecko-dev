@@ -32,6 +32,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "gfxPrefs.h"
 #include "gfxPlatform.h"
 
@@ -45,6 +46,58 @@ using mozilla::MutexAutoLock;
 
 nsTArray<GfxDriverInfo>* GfxInfoBase::mDriverInfo;
 bool GfxInfoBase::mDriverInfoObserverInitialized;
+
+class GetGraphicsFeatureStatusRunnable final : public nsCancelableRunnable
+{
+public:
+    GetGraphicsFeatureStatusRunnable(int32_t aFeature,
+                                     int32_t* aStatus,
+                                     ReentrantMonitor* aBarrier,
+                                     bool* aDone)
+      : mFeature(aFeature)
+      , mStatus(aStatus)
+      , mBarrier(aBarrier)
+      , mDone(aDone)
+      , mSuccess(false)
+    {
+    }
+
+    NS_IMETHOD Run() override
+    {
+      ReentrantMonitorAutoEnter autoMon(*mBarrier);
+      // Delegate to the parent process.
+      mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
+      cc->SendGetGraphicsFeatureStatus(mFeature, mStatus, &mSuccess);
+      *mDone = true;
+      mBarrier->NotifyAll();
+      return NS_OK;
+    }
+
+    NS_IMETHOD Cancel() override
+    {
+      mFeature = 0;
+      mStatus = nullptr;
+      mBarrier = nullptr;
+      mDone = nullptr;
+      mSuccess = false;
+      return NS_OK;
+    }
+
+    bool GetIsSuccess() const
+    {
+      return mSuccess;
+    }
+
+protected:
+    ~GetGraphicsFeatureStatusRunnable() {}
+
+private:
+    int32_t mFeature;
+    int32_t* mStatus;
+    ReentrantMonitor* mBarrier;
+    bool* mDone;
+    bool mSuccess;
+};
 
 // Observes for shutdown so that the child GfxDriverInfo list is freed.
 class ShutdownObserver : public nsIObserver
@@ -164,17 +217,64 @@ GetPrefNameForFeature(int32_t aFeature)
   return name;
 }
 
+static int32_t
+GetPref(int32_t aFeature)
+{
+  int32_t result = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
+  switch(aFeature) {
+    case nsIGfxInfo::FEATURE_DIRECT2D:
+      result = gfxPrefs::BlackListDirect2D();
+      break;
+    case nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS:
+      result = gfxPrefs::BlackListLayersDirect3D9();
+      break;
+    case nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS:
+      result = gfxPrefs::BlackListLayersDirect3D10();
+      break;
+    case nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS:
+      result = gfxPrefs::BlackListLayersDirect3D10_1();
+      break;
+    case nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS:
+      result = gfxPrefs::BlackListLayersDirect3D11();
+      break;
+    case nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE:
+      result = gfxPrefs::BlackListDirect3D11ANGLE();
+      break;
+    case nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING:
+      result = gfxPrefs::BlackListHWVideoDecoding();
+      break;
+    case nsIGfxInfo::FEATURE_OPENGL_LAYERS:
+      result = gfxPrefs::BlackListLayersOpenGL();
+      break;
+    case nsIGfxInfo::FEATURE_WEBGL_OPENGL:
+      result = gfxPrefs::BlackListWebGLOpenGL();
+      break;
+    case nsIGfxInfo::FEATURE_WEBGL_ANGLE:
+      result = gfxPrefs::BlackListWebGLANGLE();
+      break;
+    case nsIGfxInfo::FEATURE_WEBGL_MSAA:
+      result = gfxPrefs::BlackListWebGLMSAA();
+      break;
+    case nsIGfxInfo::FEATURE_STAGEFRIGHT:
+      result = gfxPrefs::BlackListStagefright();
+      break;
+    case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION:
+      result = gfxPrefs::BlackListWebRTCHWAccel();
+      break;
+    default:
+      break;
+  };
+
+  return result;
+}
+
 // Returns the value of the pref for the relevant feature in aValue.
 // If the pref doesn't exist, aValue is not touched, and returns false.
 static bool
 GetPrefValueForFeature(int32_t aFeature, int32_t& aValue)
 {
-  const char *prefname = GetPrefNameForFeature(aFeature);
-  if (!prefname)
-    return false;
-
-  aValue = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
-  return NS_SUCCEEDED(Preferences::GetInt(prefname, &aValue));
+  aValue = GetPref(aFeature);
+  return aValue != nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
 }
 
 static void
@@ -696,11 +796,21 @@ GfxInfoBase::GetFeatureStatus(int32_t aFeature, int32_t* aStatus)
     return NS_OK;
 
   if (XRE_IsContentProcess()) {
-      // Delegate to the parent process.
-      mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
-      bool success;
-      cc->SendGetGraphicsFeatureStatus(aFeature, aStatus, &success);
-      return success ? NS_OK : NS_ERROR_FAILURE;
+    ReentrantMonitor barrier("GetGraphicsFeatureStatusRunnable Lock");
+    ReentrantMonitorAutoEnter autoMon(barrier);
+    bool done = false;
+    nsRefPtr<GetGraphicsFeatureStatusRunnable> runnable =
+      new GetGraphicsFeatureStatusRunnable(aFeature, aStatus, &barrier, &done);
+    if (!NS_IsMainThread()) {
+      NS_DispatchToMainThread(runnable);
+      while (!done) {
+        barrier.Wait();
+      }
+    } else {
+      runnable->Run();
+    }
+
+    return runnable->GetIsSuccess() ? NS_OK : NS_ERROR_FAILURE;
   }
 
   nsString version;

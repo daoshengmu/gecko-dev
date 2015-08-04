@@ -386,7 +386,8 @@ struct ColorLayerProperties : public LayerPropertiesBase
   IntRect mBounds;
 };
 
-static ImageHost* GetImageHost(ImageLayer* aLayer)
+template<class T>
+static ImageHost* GetImageHost(T* aLayer)
 {
   LayerComposite* composite = aLayer->AsLayerComposite();
   if (composite) {
@@ -459,6 +460,34 @@ struct ImageLayerProperties : public LayerPropertiesBase
   bool mIsMask;
 };
 
+struct CanvasLayerProperties : public LayerPropertiesBase
+{
+  explicit CanvasLayerProperties(CanvasLayer* aCanvas)
+    : LayerPropertiesBase(aCanvas)
+    , mImageHost(GetImageHost(aCanvas))
+  {
+    mFrameID = mImageHost ? mImageHost->GetFrameID() : -1;
+  }
+
+  virtual nsIntRegion ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback,
+                                            bool& aGeometryChanged)
+  {
+    CanvasLayer* canvasLayer = static_cast<CanvasLayer*>(mLayer.get());
+
+    ImageHost* host = GetImageHost(canvasLayer);
+    if (host && host->GetFrameID() != mFrameID) {
+      aGeometryChanged = true;
+
+      return NewTransformedBounds();
+    }
+
+    return IntRect();
+  }
+
+  nsRefPtr<ImageHost> mImageHost;
+  int32_t mFrameID;
+};
+
 UniquePtr<LayerPropertiesBase>
 CloneLayerTreePropertiesInternal(Layer* aRoot, bool aIsMask /* = false */)
 {
@@ -476,6 +505,8 @@ CloneLayerTreePropertiesInternal(Layer* aRoot, bool aIsMask /* = false */)
       return MakeUnique<ColorLayerProperties>(static_cast<ColorLayer*>(aRoot));
     case Layer::TYPE_IMAGE:
       return MakeUnique<ImageLayerProperties>(static_cast<ImageLayer*>(aRoot), aIsMask);
+    case Layer::TYPE_CANVAS:
+      return MakeUnique<CanvasLayerProperties>(static_cast<CanvasLayer*>(aRoot));
     default:
       return MakeUnique<LayerPropertiesBase>(aRoot);
   }
