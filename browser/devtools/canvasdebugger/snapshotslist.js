@@ -15,8 +15,8 @@ let SnapshotsListView = Heritage.extend(WidgetMethods, {
       showArrows: true
     });
 
-    Profiler.initialize();
-    Profiler.startProfile();
+    // Profiler.initialize();
+    // Profiler.startProfile();
 
     this._onSelect = this._onSelect.bind(this);
     this._onClearButtonClick = this._onClearButtonClick.bind(this);
@@ -252,7 +252,7 @@ let SnapshotsListView = Heritage.extend(WidgetMethods, {
     }
 
     this._recordAnimation();
-    Profiler.stopProfile();
+    //Profiler.stopProfile();
   },
 
   /**
