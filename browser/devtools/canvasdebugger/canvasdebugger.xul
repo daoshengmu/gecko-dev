@@ -16,6 +16,7 @@
   <script src="chrome://browser/content/devtools/theme-switching.js"/>
   <script type="application/javascript" src="canvasdebugger.js"/>
   <script type="application/javascript" src="canvasdebugger/callslist.js"/>
+  <script type="application/javascript" src="canvasdebugger/profiler.js"/>
   <script type="application/javascript" src="canvasdebugger/snapshotslist.js"/>
 
   <hbox class="theme-body" flex="1">
