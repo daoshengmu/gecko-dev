@@ -3261,7 +3261,35 @@ Element::MozRequestFullScreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
   // Note that requests for fullscreen inside a web app's origin are exempt
   // from this restriction.
   const char* error = GetFullScreenError(OwnerDoc());
-  if (error) {
+  bool bError = false;
+  RequestFullscreenOptions fsOptions;
+
+  auto request = MakeUnique<FullscreenRequest>(this);
+  request->mIsCallerChrome = nsContentUtils::IsCallerChrome();
+  
+  // We need to check if options is convertible to a dict first before
+  // trying to init fsOptions; otherwise Init() would throw, and we want to
+  // silently ignore non-dictionary values
+  if (aCx) {
+    bool convertible;
+    if (!IsConvertibleToDictionary(aCx, aOptions, &convertible)) {
+      bError = true;
+    }
+
+    if (convertible) {
+      if (!fsOptions.Init(aCx, aOptions)) {
+        bError = true;
+      }
+
+      if (fsOptions.mVrDisplay) {
+        request->mVRHMDDevice = fsOptions.mVrDisplay->GetHMD();
+      }
+    }
+  }
+
+  // We allow vrDisaply mode to activate fullscreen without userInput.
+  // Otherwise, dispatching an error.
+  if (error && !fsOptions.mVrDisplay) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     NS_LITERAL_CSTRING("DOM"), OwnerDoc(),
                                     nsContentUtils::eDOM_PROPERTIES,
@@ -3275,30 +3303,9 @@ Element::MozRequestFullScreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
     return;
   }
 
-  auto request = MakeUnique<FullscreenRequest>(this);
-  request->mIsCallerChrome = nsContentUtils::IsCallerChrome();
-
-  RequestFullscreenOptions fsOptions;
-  // We need to check if options is convertible to a dict first before
-  // trying to init fsOptions; otherwise Init() would throw, and we want to
-  // silently ignore non-dictionary values
-  if (aCx) {
-    bool convertible;
-    if (!IsConvertibleToDictionary(aCx, aOptions, &convertible)) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    if (convertible) {
-      if (!fsOptions.Init(aCx, aOptions)) {
-        aError.Throw(NS_ERROR_FAILURE);
-        return;
-      }
-
-      if (fsOptions.mVrDisplay) {
-        request->mVRHMDDevice = fsOptions.mVrDisplay->GetHMD();
-      }
-    }
+  if (bError) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
   }
 
   OwnerDoc()->AsyncRequestFullScreen(Move(request));
