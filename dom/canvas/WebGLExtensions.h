@@ -12,6 +12,7 @@
 
 #include "WebGLObjectModel.h"
 #include "WebGLTypes.h"
+#include "mozilla/dom/Element.h"
 
 namespace mozilla {
 
@@ -378,8 +379,8 @@ public:
     explicit WebGLExtensionTextureFromElement(WebGLContext* webgl);
     virtual ~WebGLExtensionTextureFromElement();
 
-    TexImage2D(GLenum texImageTarget, GLint level, dom::Element& elem);
-    TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
+    void TexImage2D(GLenum texImageTarget, GLint level, dom::Element& elem);
+    void TexSubImage2D(GLenum texImageTarget, GLint level, GLint xOffset, GLint yOffset,
                   dom::Element& elem);
 
     DECL_WEBGL_EXTENSION_GOOP
