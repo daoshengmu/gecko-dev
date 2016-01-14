@@ -55,6 +55,7 @@ WebGLContext::GetExtensionString(WebGLExtensionID ext)
         WEBGL_EXTENSION_IDENTIFIER(WEBGL_depth_texture)
         WEBGL_EXTENSION_IDENTIFIER(WEBGL_draw_buffers)
         WEBGL_EXTENSION_IDENTIFIER(WEBGL_lose_context)
+        WEBGL_EXTENSION_IDENTIFIER(MOZ_texture_from_element)
 
 #undef WEBGL_EXTENSION_IDENTIFIER
     }

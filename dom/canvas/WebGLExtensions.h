@@ -384,6 +384,9 @@ public:
                   dom::Element& elem);
 
     DECL_WEBGL_EXTENSION_GOOP
+
+private:
+    RefPtr<mozilla::gfx::DrawTarget> mTarget;
 };
 
 } // namespace mozilla
