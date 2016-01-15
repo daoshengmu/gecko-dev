@@ -28,9 +28,15 @@ WebGLExtensionTextureFromElement::~WebGLExtensionTextureFromElement()
 }
 
 void
-WebGLExtensionTextureFromElement::TexImage2D(GLenum target, GLint level, 
+WebGLExtensionTextureFromElement::TexImage2D(GLenum rawTexImageTarget, GLint level, 
                                             dom::Element& elem)
 {
+    const char funcName[] = "texImage2D";
+    const uint8_t funcDims = 2;
+
+    TexImageTarget target;
+    WebGLTexture* tex = mContext->ActiveBoundTextureForTexImageTarget(rawTexImageTarget);
+
     nsIFrame* frame = elem.GetPrimaryFrame(Flush_Layout);
 
     if (frame) {
@@ -105,6 +111,17 @@ WebGLExtensionTextureFromElement::TexImage2D(GLenum target, GLint level,
     // // we're drawing; x and y are drawn to 0,0 in current user
     // // space.
     // RedrawUser(gfxRect(0, 0, w, h));
+
+    // Render domElement into a WebGL texture. Currently, it supports <img>, <canvas>, 
+    // and <video> elements
+    const bool isSubImage = false;
+    const GLint xOffset = 0;
+    const GLint yOffset = 0;
+    const GLint zOffset = 0;
+    ErrorResult out_error;
+
+    tex->TexOrSubImage(isSubImage, funcName, rawTexImageTarget, 0, LOCAL_GL_RGBA, xOffset,
+                       yOffset, zOffset, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, &elem, &out_error);
 }
 
 void
