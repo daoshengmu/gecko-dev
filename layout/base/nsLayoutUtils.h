@@ -74,6 +74,7 @@ class Element;
 class HTMLImageElement;
 class HTMLCanvasElement;
 class HTMLVideoElement;
+class HTMLIFrameElement;
 class OffscreenCanvas;
 class Selection;
 } // namespace dom
@@ -2150,6 +2151,9 @@ public:
   }
 
   static SurfaceFromElementResult SurfaceFromElement(nsIImageLoadingContent *aElement,
+                                                     uint32_t aSurfaceFlags,
+                                                     RefPtr<DrawTarget>& aTarget);
+  static SurfaceFromElementResult SurfaceFromElement(mozilla::dom::HTMLIFrameElement *aElement,
                                                      uint32_t aSurfaceFlags,
                                                      RefPtr<DrawTarget>& aTarget);
   // Need an HTMLImageElement overload, because otherwise the

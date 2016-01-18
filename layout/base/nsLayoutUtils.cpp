@@ -107,6 +107,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/RuleNodeCacheConditions.h"
+#include "mozilla/dom/HTMLIFrameElement.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -7048,6 +7049,76 @@ nsLayoutUtils::SurfaceFromElement(HTMLImageElement *aElement,
 }
 
 nsLayoutUtils::SurfaceFromElementResult
+nsLayoutUtils::SurfaceFromElement(HTMLIFrameElement *aElement,
+                                  uint32_t aSurfaceFlags,
+                                  RefPtr<DrawTarget>& aTarget)
+{
+  SurfaceFromElementResult result;
+  
+  //nsGenericHTMLFrameElement
+  // Todo: grab the surface from iframe
+  nsIDocument* contentDocument;
+  contentDocument = aElement->GetContentDocument();
+  
+  if (!contentDocument)
+    return result;
+    
+  nsIPresShell* shell = contentDocument->GetShell();
+  
+  if (shell) {
+    nscolor backgroundColor = 0xffffffff;
+    uint32_t renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
+                               nsIPresShell::RENDER_DOCUMENT_RELATIVE);
+    RefPtr<gfxContext> thebes;
+    RefPtr<DrawTarget> drawDT;
+    const uint sw = 1024, sh = 1024;
+    
+    nsRect r(nsPresContext::CSSPixelsToAppUnits((float)0),
+             nsPresContext::CSSPixelsToAppUnits((float)0),
+             nsPresContext::CSSPixelsToAppUnits((float)sw),
+             nsPresContext::CSSPixelsToAppUnits((float)sh));
+    
+    drawDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+                      IntSize(ceil(sw), ceil(sh)), SurfaceFormat::B8G8R8A8);
+    thebes = new gfxContext(drawDT);
+    Unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
+    
+    if (drawDT) {
+      RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
+      RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
+      
+      DataSourceSurface::MappedSurface rawData;
+      if (NS_WARN_IF(!data->Map(DataSourceSurface::READ, &rawData))) {
+        return result;
+      }
+      
+      RefPtr<SourceSurface> source =
+      drawDT->CreateSourceSurfaceFromData(rawData.mData,
+                                           data->GetSize(),
+                                           rawData.mStride,
+                                           data->GetFormat());
+      data->Unmap();
+      
+      if (!source) {
+        return result;
+      }
+      
+      const double alpha = 1.0;
+      const uint w = sw, h = sh;
+      gfx::Rect destRect(0, 0, w, h);
+      gfx::Rect sourceRect(0, 0, sw, sh);
+      drawDT->DrawSurface(source, destRect, sourceRect,
+                           DrawSurfaceOptions(gfx::Filter::POINT),
+                           DrawOptions(alpha, mozilla::gfx::CompositionOp::OP_OVER,
+                                       AntialiasMode::NONE));
+      drawDT->Flush();
+    }
+  }
+  
+  return result;
+}
+
+nsLayoutUtils::SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
                                   uint32_t aSurfaceFlags,
                                   RefPtr<DrawTarget>& aTarget)
@@ -7155,6 +7226,14 @@ nsLayoutUtils::SurfaceFromElement(dom::Element* aElement,
                                   uint32_t aSurfaceFlags,
                                   RefPtr<DrawTarget>& aTarget)
 {
+  // If it's a <iframe>
+  if (HTMLIFrameElement* elem =
+      HTMLIFrameElement::FromContentOrNull(aElement)) {
+    
+  //  nsGenericHTMLFrameElement *iframe = static_cast<nsGenericHTMLFrameElement *>(elem);
+    return SurfaceFromElement(elem, aSurfaceFlags, aTarget);
+  }
+  
   // If it's a <canvas>, we may be able to just grab its internal surface
   if (HTMLCanvasElement* canvas =
         HTMLCanvasElement::FromContentOrNull(aElement)) {
