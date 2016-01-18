@@ -236,12 +236,12 @@ public:
                        GLint zOffset, GLenum unpackFormat, GLenum unpackType,
                        dom::Element* elem, ErrorResult* const out_error);
 
-protected:
     void TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarget target,
                        GLint level, GLenum internalFormat, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLint border, GLenum unpackFormat,
                        GLenum unpackType, webgl::TexUnpackBlob* blob);
 
+protected:
     bool ValidateTexImageSpecification(const char* funcName, TexImageTarget target,
                                        GLint level, GLsizei width, GLsizei height,
                                        GLsizei depth, GLint border,

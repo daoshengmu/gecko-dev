@@ -7101,6 +7101,8 @@ nsLayoutUtils::SurfaceFromElement(HTMLIFrameElement *aElement,
       
       if (!source) {
         return result;
+      } else {
+        result.mSourceSurface = source;
       }
       
       const double alpha = 1.0;
@@ -7114,6 +7116,9 @@ nsLayoutUtils::SurfaceFromElement(HTMLIFrameElement *aElement,
       drawDT->Flush();
     }
   }
+  
+  result.mCORSUsed = true;
+  result.mIsWriteOnly = false;
   
   return result;
 }

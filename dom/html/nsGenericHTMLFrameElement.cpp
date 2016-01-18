@@ -95,11 +95,12 @@ nsGenericHTMLFrameElement::GetContentDocument()
     return nullptr;
   }
 
-  // Return null for cross-origin contentDocument.
-  if (!nsContentUtils::SubjectPrincipal()->
-        SubsumesConsideringDomain(doc->NodePrincipal())) {
-    return nullptr;
-  }
+  // Disable cross-origin check for experimenting iframe renderDocument.
+//  // Return null for cross-origin contentDocument.
+//  if (!nsContentUtils::SubjectPrincipal()->
+//        SubsumesConsideringDomain(doc->NodePrincipal())) {
+//    return nullptr;
+//  }
   return doc;
 }
 

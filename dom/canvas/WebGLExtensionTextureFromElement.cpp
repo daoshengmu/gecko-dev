@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// #include "GLContext.h"
 #include "WebGLExtensions.h"
+#include "TexUnpackBlob.h"
 #include "nsIFrame.h"
 #include "mozilla/unused.h"
 #include "mozilla/gfx/Point.h"
@@ -19,7 +19,7 @@ WebGLExtensionTextureFromElement::WebGLExtensionTextureFromElement(WebGLContext*
 {
     const uint sw = 256, sh = 256;
     mTarget = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-                IntSize(ceil(sw), ceil(sh)), SurfaceFormat::B8G8R8A8);
+              IntSize(ceil(sw), ceil(sh)), SurfaceFormat::B8G8R8A8);
 }
 
 WebGLExtensionTextureFromElement::~WebGLExtensionTextureFromElement()
@@ -32,19 +32,20 @@ WebGLExtensionTextureFromElement::TexImage2D(GLenum rawTexImageTarget, GLint lev
                                             dom::Element& elem)
 {
     const char funcName[] = "texImage2D";
-    const uint8_t funcDims = 2;
-
-    TexImageTarget target;
+    const bool isSubImage = false;
+    const GLint xOffset = 0;
+    const GLint yOffset = 0;
+    const GLint zOffset = 0;
+    ErrorResult out_error;
     WebGLTexture* tex = mContext->ActiveBoundTextureForTexImageTarget(rawTexImageTarget);
-
     nsIFrame* frame = elem.GetPrimaryFrame(Flush_Layout);
 
     if (frame) {
         frame = nsLayoutUtils::GetStyleFrame(frame);    
     }
-    
+
     if (!frame) {
-        return;
+      return;
     }
 
     RefPtr<nsPresContext> presContext = frame->PresContext();
@@ -52,24 +53,17 @@ WebGLExtensionTextureFromElement::TexImage2D(GLenum rawTexImageTarget, GLint lev
     // Do some transform
     // End of transform
 
-    // mTarget.
     nscolor backgroundColor = 0xffffffff;
     uint32_t renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
-                             nsIPresShell::RENDER_DOCUMENT_RELATIVE);
+                           nsIPresShell::RENDER_DOCUMENT_RELATIVE);
     RefPtr<gfxContext> thebes;
     RefPtr<DrawTarget> drawDT;
     const uint sw = 256, sh = 256;
 
-    nsRect r(nsPresContext::CSSPixelsToAppUnits((float)0),
-           nsPresContext::CSSPixelsToAppUnits((float)0),
-           nsPresContext::CSSPixelsToAppUnits((float)sw),
-           nsPresContext::CSSPixelsToAppUnits((float)sh));
-
-    // drawDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-    //             IntSize(ceil(sw), ceil(sh)), SurfaceFormat::B8G8R8A8);
-    // if (!drawDT) {
-    //   return;
-    // }
+    nsRect r(nsPresContext::CSSPixelsToAppUnits((float)300),
+         nsPresContext::CSSPixelsToAppUnits((float)0),
+         nsPresContext::CSSPixelsToAppUnits((float)sw),
+         nsPresContext::CSSPixelsToAppUnits((float)sh));
 
     thebes = new gfxContext(mTarget);
 
@@ -77,7 +71,7 @@ WebGLExtensionTextureFromElement::TexImage2D(GLenum rawTexImageTarget, GLint lev
     Unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
     // Render document https://dxr.mozilla.org/mozilla-central/source/dom/canvas/CanvasRenderingContext2D.cpp#4911
 
-    if (mTarget) {
+    if (mTarget && false) {
         RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
         RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
 
@@ -93,7 +87,7 @@ WebGLExtensionTextureFromElement::TexImage2D(GLenum rawTexImageTarget, GLint lev
         data->Unmap();
 
         if (!source) {
-          return;
+            return;
         }
 
         const double alpha = 1.0;
@@ -105,6 +99,15 @@ WebGLExtensionTextureFromElement::TexImage2D(GLenum rawTexImageTarget, GLint lev
                              DrawOptions(alpha, mozilla::gfx::CompositionOp::OP_OVER,
                                          AntialiasMode::NONE));
         mTarget->Flush();
+
+        UniquePtr<webgl::TexUnpackBlob> blob;
+        blob.reset(new webgl::TexUnpackSurface(source, false));
+        const GLint border = 0;
+        
+        tex->TexOrSubImage(isSubImage, funcName, rawTexImageTarget, level, LOCAL_GL_RGBA, 
+            xOffset, yOffset, zOffset, border, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, blob.get());
+
+        return;
     }
 
     // // note that x and y are coordinates in the document that
@@ -112,16 +115,24 @@ WebGLExtensionTextureFromElement::TexImage2D(GLenum rawTexImageTarget, GLint lev
     // // space.
     // RedrawUser(gfxRect(0, 0, w, h));
 
-    // Render domElement into a WebGL texture. Currently, it supports <img>, <canvas>, 
+    // if (blob) {
+    //     if (!sfer.mCORSUsed) {
+    //       auto& srcPrincipal = sfer.mPrincipal;
+    //       nsIPrincipal* dstPrincipal = mContext->GetCanvas()->NodePrincipal();
+          
+    //       if (!dstPrincipal->Subsumes(srcPrincipal)) {
+    //           mContext->GenerateWarning("%s: Cross-origin elements require CORS.", funcName);
+    //             out_error->Throw(NS_ERROR_DOM_SECURITY_ERR);
+    //             return;
+    //       }
+    //   }
+      
+    // }
+ 
+    // Render domElement into a WebGL texture. Currently, it supports <img>, <canvas>,
     // and <video> elements
-    const bool isSubImage = false;
-    const GLint xOffset = 0;
-    const GLint yOffset = 0;
-    const GLint zOffset = 0;
-    ErrorResult out_error;
-
     tex->TexOrSubImage(isSubImage, funcName, rawTexImageTarget, 0, LOCAL_GL_RGBA, xOffset,
-                       yOffset, zOffset, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, &elem, &out_error);
+                        yOffset, zOffset, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, &elem, &out_error);
 }
 
 void
