@@ -7067,11 +7067,10 @@ nsLayoutUtils::SurfaceFromElement(HTMLIFrameElement *aElement,
   
   if (shell) {
     nscolor backgroundColor = 0xffffffff;
-    uint32_t renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
-                               nsIPresShell::RENDER_DOCUMENT_RELATIVE);
+    uint32_t renderDocFlags = nsIPresShell::RENDER_DOCUMENT_RELATIVE;
     RefPtr<gfxContext> thebes;
     RefPtr<DrawTarget> drawDT;
-    const uint sw = 1024, sh = 1024;
+    const uint sw = 256, sh = 256;
     
     nsRect r(nsPresContext::CSSPixelsToAppUnits((float)0),
              nsPresContext::CSSPixelsToAppUnits((float)0),
@@ -7085,34 +7084,13 @@ nsLayoutUtils::SurfaceFromElement(HTMLIFrameElement *aElement,
     
     if (drawDT) {
       RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
-      RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
       
-      DataSourceSurface::MappedSurface rawData;
-      if (NS_WARN_IF(!data->Map(DataSourceSurface::READ, &rawData))) {
-        return result;
-      }
-      
-      RefPtr<SourceSurface> source =
-      drawDT->CreateSourceSurfaceFromData(rawData.mData,
-                                           data->GetSize(),
-                                           rawData.mStride,
-                                           data->GetFormat());
-      data->Unmap();
-      
-      if (!source) {
+      if (!snapshot) {
         return result;
       } else {
-        result.mSourceSurface = source;
+        result.mSourceSurface = snapshot;
       }
       
-      const double alpha = 1.0;
-      const uint w = sw, h = sh;
-      gfx::Rect destRect(0, 0, w, h);
-      gfx::Rect sourceRect(0, 0, sw, sh);
-      drawDT->DrawSurface(source, destRect, sourceRect,
-                           DrawSurfaceOptions(gfx::Filter::POINT),
-                           DrawOptions(alpha, mozilla::gfx::CompositionOp::OP_OVER,
-                                       AntialiasMode::NONE));
       drawDT->Flush();
     }
   }

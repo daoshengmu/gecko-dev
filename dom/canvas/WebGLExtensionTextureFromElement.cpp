@@ -9,6 +9,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/dom/HTMLIFrameElement.h"
 
 using namespace mozilla::gfx;
 
@@ -37,71 +38,42 @@ WebGLExtensionTextureFromElement::TexImage2D(GLenum rawTexImageTarget, GLint lev
     const GLint yOffset = 0;
     const GLint zOffset = 0;
     ErrorResult out_error;
+
     WebGLTexture* tex = mContext->ActiveBoundTextureForTexImageTarget(rawTexImageTarget);
-    nsIFrame* frame = elem.GetPrimaryFrame(Flush_Layout);
+    TexImageTarget target;
+    nsIDocument* contentDocument = nullptr;
 
-    if (frame) {
-        frame = nsLayoutUtils::GetStyleFrame(frame);    
+    if (dom::HTMLIFrameElement* iframeElem =
+        dom::HTMLIFrameElement::FromContentOrNull(&elem)) {
+        contentDocument = iframeElem->GetContentDocument();
+    } else {
+        contentDocument = elem.GetComposedDoc();
     }
 
-    if (!frame) {
-      return;
-    }
-
-    RefPtr<nsPresContext> presContext = frame->PresContext();
+    nsIPresShell* shell = contentDocument->GetShell();
 
     // Do some transform
     // End of transform
 
     nscolor backgroundColor = 0xffffffff;
-    uint32_t renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
-                           nsIPresShell::RENDER_DOCUMENT_RELATIVE);
+    uint32_t renderDocFlags = nsIPresShell::RENDER_DOCUMENT_RELATIVE;
     RefPtr<gfxContext> thebes;
-    RefPtr<DrawTarget> drawDT;
     const uint sw = 256, sh = 256;
 
-    nsRect r(nsPresContext::CSSPixelsToAppUnits((float)300),
-         nsPresContext::CSSPixelsToAppUnits((float)0),
-         nsPresContext::CSSPixelsToAppUnits((float)sw),
-         nsPresContext::CSSPixelsToAppUnits((float)sh));
+    nsRect r(nsPresContext::CSSPixelsToAppUnits((float)0),
+        nsPresContext::CSSPixelsToAppUnits((float)0),
+        nsPresContext::CSSPixelsToAppUnits((float)sw),
+        nsPresContext::CSSPixelsToAppUnits((float)sh));
 
     thebes = new gfxContext(mTarget);
 
-    nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
-    Unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
-    // Render document https://dxr.mozilla.org/mozilla-central/source/dom/canvas/CanvasRenderingContext2D.cpp#4911
-
-    if (mTarget && false) {
+    if (shell && false) {
+        Unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
+        // Render document https://dxr.mozilla.org/mozilla-central/source/dom/canvas/CanvasRenderingContext2D.cpp#4911
         RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
-        RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
-
-        DataSourceSurface::MappedSurface rawData;
-        if (NS_WARN_IF(!data->Map(DataSourceSurface::READ, &rawData))) {
-            return;
-        }
-        RefPtr<SourceSurface> source =
-          mTarget->CreateSourceSurfaceFromData(rawData.mData,
-                                               data->GetSize(),
-                                               rawData.mStride,
-                                               data->GetFormat());
-        data->Unmap();
-
-        if (!source) {
-            return;
-        }
-
-        const double alpha = 1.0;
-        const uint w = sw, h = sh;
-        gfx::Rect destRect(0, 0, w, h);
-        gfx::Rect sourceRect(0, 0, sw, sh);
-        mTarget->DrawSurface(source, destRect, sourceRect,
-                             DrawSurfaceOptions(gfx::Filter::POINT),
-                             DrawOptions(alpha, mozilla::gfx::CompositionOp::OP_OVER,
-                                         AntialiasMode::NONE));
-        mTarget->Flush();
 
         UniquePtr<webgl::TexUnpackBlob> blob;
-        blob.reset(new webgl::TexUnpackSurface(source, false));
+        blob.reset(new webgl::TexUnpackSurface(snapshot, false));
         const GLint border = 0;
         
         tex->TexOrSubImage(isSubImage, funcName, rawTexImageTarget, level, LOCAL_GL_RGBA, 
@@ -114,20 +86,6 @@ WebGLExtensionTextureFromElement::TexImage2D(GLenum rawTexImageTarget, GLint lev
     // // we're drawing; x and y are drawn to 0,0 in current user
     // // space.
     // RedrawUser(gfxRect(0, 0, w, h));
-
-    // if (blob) {
-    //     if (!sfer.mCORSUsed) {
-    //       auto& srcPrincipal = sfer.mPrincipal;
-    //       nsIPrincipal* dstPrincipal = mContext->GetCanvas()->NodePrincipal();
-          
-    //       if (!dstPrincipal->Subsumes(srcPrincipal)) {
-    //           mContext->GenerateWarning("%s: Cross-origin elements require CORS.", funcName);
-    //             out_error->Throw(NS_ERROR_DOM_SECURITY_ERR);
-    //             return;
-    //       }
-    //   }
-      
-    // }
  
     // Render domElement into a WebGL texture. Currently, it supports <img>, <canvas>,
     // and <video> elements
