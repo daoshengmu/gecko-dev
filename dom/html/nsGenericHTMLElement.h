@@ -144,20 +144,14 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::hidden, aHidden, aError);
   }
   virtual void Click();
-  virtual int32_t TabIndexDefault()
-  {
-    return -1;
-  }
-  int32_t TabIndex()
-  {
-    return GetIntAttr(nsGkAtoms::tabindex, TabIndexDefault());
-  }
   void SetTabIndex(int32_t aTabIndex, mozilla::ErrorResult& aError)
   {
-    SetHTMLIntAttr(nsGkAtoms::tabindex, aTabIndex, aError);
+    mozilla::dom::Element::SetTabIndex(aTabIndex, aError);
   }
-  virtual void Focus(mozilla::ErrorResult& aError);
-  virtual void Blur(mozilla::ErrorResult& aError);
+  virtual void Focus(mozilla::ErrorResult& aError)
+  {
+    mozilla::dom::Element::Focus(this, aError);
+  }
   void GetAccessKey(nsString& aAccessKey)
   {
     GetHTMLAttr(nsGkAtoms::accesskey, aAccessKey);

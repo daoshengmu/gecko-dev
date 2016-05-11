@@ -1120,6 +1120,25 @@ nsSVGElement::ClassName()
   return mClassAttribute.ToDOMAnimatedString(this);
 }
 
+void
+nsSVGElement::Focus(ErrorResult& aError)
+{
+  mozilla::dom::Element::Focus(this, aError);
+}
+   
+bool
+nsSVGElement::IsFocusableInternal(int32_t* aTabIndex, bool)
+{
+  int32_t index = TabIndex();
+  
+  if (index == -1) {
+    return false;
+  }
+  
+  *aTabIndex = index;
+  return true;
+}
+  
 //------------------------------------------------------------------------
 // Helper class: MappedAttrParser, for parsing values of mapped attributes
 

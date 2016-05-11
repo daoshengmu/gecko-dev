@@ -1731,18 +1731,7 @@ nsXULElement::Blur()
 void
 nsXULElement::Blur(ErrorResult& rv)
 {
-    if (!ShouldBlur(this))
-      return;
-
-    nsIDocument* doc = GetComposedDoc();
-    if (!doc)
-      return;
-
-    nsPIDOMWindowOuter* win = doc->GetWindow();
-    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-    if (win && fm) {
-      rv = fm->ClearFocus(win);
-    }
+    mozilla::dom::Element::Blur(rv);
 }
 
 NS_IMETHODIMP

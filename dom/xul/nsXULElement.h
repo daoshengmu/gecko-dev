@@ -563,7 +563,7 @@ public:
     nsIControllers* GetControllers(mozilla::ErrorResult& rv);
     already_AddRefed<mozilla::dom::BoxObject> GetBoxObject(mozilla::ErrorResult& rv);
     void Focus(mozilla::ErrorResult& rv);
-    void Blur(mozilla::ErrorResult& rv);
+    virtual void Blur(mozilla::ErrorResult& rv) override;
     void Click(mozilla::ErrorResult& rv);
     // The XPCOM DoCommand never fails, so it's OK for us.
     already_AddRefed<nsINodeList>

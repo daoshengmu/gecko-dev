@@ -198,6 +198,26 @@ public:
                                         NS_EVENT_STATE_FULL_SCREEN);
   }
 
+  // Tabindex
+  virtual int32_t TabIndexDefault()
+  {
+    return -1;
+  }
+
+  int32_t TabIndex();
+
+  void SetTabIndex(int32_t aTabIndex, mozilla::ErrorResult& aError)
+  {
+    nsAutoString value;
+    value.AppendInt(aTabIndex);
+
+    SetAttr(nsGkAtoms::tabindex, value, aError);
+  }
+
+  void Focus(nsIDOMElement* aElement, mozilla::ErrorResult& aError);
+
+  virtual void Blur(mozilla::ErrorResult& aError);
+
   /**
    * The style state of this element. This is the real state of the element
    * with any style locks applied for pseudo-class inspecting.

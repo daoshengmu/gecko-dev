@@ -290,6 +290,64 @@ Element::UpdateEditableState(bool aNotify)
   }
 }
 
+int32_t
+Element::TabIndex()
+{
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::tabindex);
+  
+  if (attrVal) {
+    switch (attrVal->Type()) {
+      case nsAttrValue::eInteger: {
+        return attrVal->GetIntegerValue();
+        break;
+      }
+      case nsAttrValue::eString:
+      case nsAttrValue::eAtom: {
+        nsAttrValue tmpVal;
+
+        if (tmpVal.ParseIntValue(attrVal->GetStringValue())) {
+          return tmpVal.GetIntegerValue();
+        }
+        break;
+      }
+      default: {
+        return TabIndexDefault();
+        break;
+      }
+    }
+  }
+
+  return TabIndexDefault();
+}
+
+void
+Element::Focus(nsIDOMElement* aElement, mozilla::ErrorResult& aError)
+{
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    aError = fm->SetFocus(aElement, 0);
+  }
+}
+
+void
+Element::Blur(mozilla::ErrorResult& aError)
+{
+  if (!ShouldBlur(this)) {
+    return;
+  }
+
+  nsIDocument* doc = GetComposedDoc();
+  if (!doc) {
+    return;
+  }
+
+  nsPIDOMWindowOuter* win = doc->GetWindow();
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (win && fm) {
+    aError = fm->ClearFocus(win);
+  }
+}
+
 EventStates
 Element::StyleStateFromLocks() const
 {
