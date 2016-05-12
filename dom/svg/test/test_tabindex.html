@@ -1,0 +1,36 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for SVG tabIndex - Bug 778654</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" overflow="visible">
+  <g id="f" tabIndex="0">
+    <rect width="100" height="100" fill="yellow"/>
+  </g>
+</svg>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function main()
+{
+  var f = document.getElementById('f');
+
+  try {
+    is(f.tabIndex, 0, "initial tabIndex");
+    f.tabIndex = 1;
+    is(f.tabIndex, 1, "tabIndex is set to 1");
+  } catch(e) {
+    ok(false, "Got unexpected exception" + e);
+  }
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main, false);
+</script>
+</pre>
+</body>
+</html>

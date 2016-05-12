@@ -320,6 +320,8 @@ fuzzy-if(skiaContent,1,2600) == svg-in-foreignObject-02.xhtml svg-in-foreignObje
 == svg-transform-01.svg pass.svg
 == svg-transform-02.svg pass.svg
 == symbol-01.svg symbol-01-ref.svg
+== tabindex.html tabindex-ref.html
+== tabindex-transform.html tabindex-transform-ref.html
 == text-font-size-01.svg pass.svg
 random-if(gtkWidget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
 == text-gradient-01.svg text-gradient-01-ref.svg
