@@ -1072,6 +1072,16 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
     }
 #endif
 
+#ifdef XP_WIN
+    // In some NVIDIA driver, the maximum of framebuffer size is not
+    // equal to GL_MAX_RENDERBUFFER_SIZE. It can only be created to be less
+    // equal than 16383 x 16383. Otherwise, it will occur driver crash.
+    if (mWorkAroundDriverBugs &&
+        mVendor == GLVendor::NVIDIA) {
+        mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 16383);
+    }
+#endif
+
     mMaxTextureImageSize = mMaxTextureSize;
 
     if (IsSupported(GLFeature::framebuffer_multisample)) {

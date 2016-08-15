@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='UTF-8'>
+  <script src='/tests/SimpleTest/SimpleTest.js'></script>
+  <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+  <script src="webgl-util.js"></script>
+</head>
+<title>WebGL test: Framebuffer maximum size test. #bug 1290333</title>
+<body>
+  <canvas id='c' width="64" height="64"></canvas>
+  <canvas id='c2' width="64" height="64"></canvas>
+<script>
+// Test WebGL 1
+function TestWebGL1() {
+  var attributes = {
+    antialias: false,
+  };
+  var gl = WebGLUtil.getWebGL('c', false, attributes);
+  if (!gl) {
+    todo(false, 'WebGL 1 is unavailable.');
+    return;
+  }
+  gl.canvas.width = 16384;
+  gl.canvas.height = 16384;
+
+  ok(true, 'WebGL 1 test complete.');
+}
+
+// Test WebGL 2
+function TestWebGL2() {
+  var canvas = document.getElementById('c2');
+  if (!canvas) {
+    todo(false, 'canvas c2 is unavailable.');
+    return;
+  }
+
+  var attributes = {
+    antialias: false,
+  };
+  var gl = canvas.getContext('webgl2', attributes);
+  if (!gl) {
+    todo(false, 'WebGL 2 is unavailable.');
+    return;
+  }
+  gl.canvas.width = 16384;
+  gl.canvas.height = 16384;
+
+  ok(true, 'WebGL 2 test complete.');
+}
+
+function run() {
+  TestWebGL1();
+  TestWebGL2();
+
+  ok(true, 'Test complete.');
+  SimpleTest.finish();
+}
+
+////////////////////////////////////////
+
+SimpleTest.waitForExplicitFinish();
+
+try {
+  var prefPairList = [
+    ['webgl.force-enabled', true],
+  ];
+  var prefEnv = {'set': prefPairList};
+  SpecialPowers.pushPrefEnv(prefEnv, run);
+} catch (e) {
+  warning('No SpecialPowers, but trying WebGL2 anyway...');
+  run();
+}
+
+</script>
+</body>
+</html>
