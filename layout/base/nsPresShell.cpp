@@ -20,6 +20,7 @@
 
 #include "mozilla/Logging.h"
 
+#include "WebRender.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CSSStyleSheet.h"
 #include "mozilla/EventDispatcher.h"
@@ -6517,6 +6518,10 @@ PresShell::RecordShadowStyleChange(ShadowRoot* aShadowRoot)
   mChangedScopeStyleRoots.AppendElement(aShadowRoot->GetHost()->AsElement());
 }
 
+extern "C" void* wr_create();
+extern "C" void wr_init();
+extern "C" void test_rust();
+
 void
 PresShell::Paint(nsView*        aViewToPaint,
                  const nsRegion& aDirtyRegion,
@@ -6642,6 +6647,8 @@ PresShell::Paint(nsView*        aViewToPaint,
       VisibilityCounter::IN_DISPLAYPORT
     });
 
+    wr_init();
+    test_rust();
     // We can paint directly into the widget using its layer manager.
     nsLayoutUtils::PaintFrame(nullptr, frame, aDirtyRegion, bgcolor,
                               nsDisplayListBuilderMode::PAINTING, flags);

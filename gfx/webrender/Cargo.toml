@@ -30,3 +30,11 @@ freetype = {git = "https://github.com/servo/rust-freetype"}
 [target.'cfg(target_os = "macos")'.dependencies]
 core-graphics = "0.4"
 core-text = "2.0"
+
+[lib]
+name = "webrender"
+crate-type = ["staticlib"] # could be `staticlib` as well
+
+[profile.release]
+opt-level = 3
+debug = true

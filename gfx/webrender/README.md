@@ -14,3 +14,7 @@ To use a custom webrender with servo, go to your servo build directory and:
   1. Edit servo/.cargo/config - Create this file if it doesn't exist already.
   2. Add 'paths = ["/Users/UserName/Path/To/webrender"]'
   3. Build as normal
+
+Build Cargo for Gecko as library usage
+Debug version: cargo build
+Release version: cargo build --release

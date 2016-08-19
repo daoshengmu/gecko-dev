@@ -108,3 +108,16 @@ extern crate byteorder;
 extern crate rayon;
 
 pub use renderer::{Renderer, RendererOptions};
+
+
+#[no_mangle]
+pub extern fn wr_init() {
+
+    // NB: rust &str aren't null terminated.
+    let greeting = "hello from rust.\0";
+}
+
+#[no_mangle]
+pub extern fn test_rust() {
+    println!("---Test rust----.....");
+}
