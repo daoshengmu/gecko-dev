@@ -6517,6 +6517,7 @@ PresShell::RecordShadowStyleChange(ShadowRoot* aShadowRoot)
   mChangedScopeStyleRoots.AppendElement(aShadowRoot->GetHost()->AsElement());
 }
 
+
 void
 PresShell::Paint(nsView*        aViewToPaint,
                  const nsRegion& aDirtyRegion,
