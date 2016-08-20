@@ -42,11 +42,15 @@
 #include "GLBlitTextureImageHelper.h"
 #include "HeapCopyOfStackArray.h"
 
+#include "WebRender.h"
+
 #if MOZ_WIDGET_ANDROID
 #include "TexturePoolOGL.h"
 #endif
 
 #include "GeckoProfiler.h"
+
+mozilla::gfx::Webrender* gWebrender;
 
 namespace mozilla {
 
@@ -136,6 +140,15 @@ CompositorOGL::CreateContext()
   if (!context) {
     context = gl::GLContextProvider::CreateForCompositorWidget(mWidget,
                 gfxPlatform::GetPlatform()->RequiresAcceleratedGLContextForCompositorOGL());
+  
+    gWebrender = new Webrender();
+    gWebrender->glContext = context;
+
+    // TODO: don't create a new window, but do makecurrent and pass
+    //       the context to webrenderer
+    //gGLContext->MakeCurrent();
+
+    printf_stderr("WR Begin\n");
   }
 
   if (!context) {
