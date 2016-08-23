@@ -20,7 +20,6 @@
 
 #include "mozilla/Logging.h"
 
-#include "WebRender.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CSSStyleSheet.h"
 #include "mozilla/EventDispatcher.h"
@@ -6645,30 +6644,30 @@ PresShell::Paint(nsView*        aViewToPaint,
       VisibilityCounter::IN_DISPLAYPORT
     });
 
-    // check webrender is activated
-    if (gWebrender) {
-      if (!gWebrender->wrState) {
-        // TODO:: Confirm why gWebrender->wrState needs to be created late,
-        // can't be put at CompositorOGL::CreateContext?
-        gWebrender->wrState = wr_create();
-        //((mozilla::gl::GLContext *)gWebrender->glContext)->MakeCurrent();
-      }
+    // // check webrender is activated
+    // if (gWebrender) {
+    //   if (!gWebrender->wrState) {
+    //     // TODO:: Confirm why gWebrender->wrState needs to be created late,
+    //     // can't be put at CompositorOGL::CreateContext?
+    //     gWebrender->wrState = wr_create();
+    //     ((mozilla::gl::GLContext *)gWebrender->glContext)->MakeCurrent();
+    //   }
 
-      static int frame = 0;
+    //   static int frame = 0;
 
-      test_rust();
-      wr_dp_begin(gWebrender->wrState);
-      wr_dp_push_rect(gWebrender->wrState, frame++ % 100, frame++ % 100, 100, 100, 1.f, 0.f, 0.f, 1.f);
-    }
+    //   test_rust();
+    //   wr_dp_begin(gWebrender->wrState);
+    //   wr_dp_push_rect(gWebrender->wrState, frame++ % 100, frame++ % 100, 100, 100, 1.f, 0.f, 0.f, 1.f);
+    // }
     // We can paint directly into the widget using its layer manager.
     nsLayoutUtils::PaintFrame(nullptr, frame, aDirtyRegion, bgcolor,
                               nsDisplayListBuilderMode::PAINTING, flags);
 
-    if (gWebrender) {
-      printf_stderr("WR Ending\n");
-      wr_dp_end(gWebrender->wrState);
-      printf_stderr("WR End\n");
-    }
+    // if (gWebrender) {
+    //   printf_stderr("WR Ending\n");
+    //   wr_dp_end(gWebrender->wrState);
+    //   printf_stderr("WR End\n");
+    // }
 
     return;
   }

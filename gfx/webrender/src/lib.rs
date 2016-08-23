@@ -267,6 +267,10 @@ pub extern fn wr_dp_begin(state:&mut wrstate) {
 
 #[no_mangle]
 pub extern fn wr_dp_end(state:&mut wrstate) {
+    unsafe {
+        // set back the current context to webrender one.   
+        state.window.make_current().ok();
+    }
     let epoch = Epoch(0);
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
     let pipeline_id = PipelineId(0, 0);
@@ -334,4 +338,11 @@ pub extern fn wr_dp_push_rect(state:&mut wrstate, x: f32, y: f32, w: f32, h: f32
 #[no_mangle]
 pub extern fn test_rust() {
     println!("---Test rust----.....");
+}
+
+#[no_mangle]
+pub extern fn draw_test() {
+    println!("---Draw test----.....");
+    gl::clear_color(0.3, 0.0, 0.0, 1.0);
+    gl::clear(gl::COLOR_BUFFER_BIT);
 }

@@ -13,9 +13,7 @@ namespace mozilla {
 	}
 }
 
-// extern GLContext* gGLContext;
-
-extern mozilla::gfx::Webrender* gWebrender;
+extern mozilla::gfx::Webrender gWebrender;
 
 extern "C" {
 	void* wr_create(); // Return wr_state
@@ -28,6 +26,7 @@ extern "C" {
 											 float w, float h,
 											 float r, float g, float b, float a);
 	void test_rust();
+	void draw_test();
 }
 
 #endif // /* GFX_WEBRENDER_H */

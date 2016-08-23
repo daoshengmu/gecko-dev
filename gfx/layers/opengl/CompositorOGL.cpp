@@ -50,7 +50,7 @@
 
 #include "GeckoProfiler.h"
 
-mozilla::gfx::Webrender* gWebrender;
+mozilla::gfx::Webrender gWebrender;
 
 namespace mozilla {
 
@@ -140,15 +140,21 @@ CompositorOGL::CreateContext()
   if (!context) {
     context = gl::GLContextProvider::CreateForCompositorWidget(mWidget,
                 gfxPlatform::GetPlatform()->RequiresAcceleratedGLContextForCompositorOGL());
-  
-    gWebrender = new Webrender();
-    gWebrender->glContext = context;
+    
+    if (!gWebrender.wrState) {
+      // On OSX, OGL context is 2.1, but Webrender is 4.1
+      gWebrender.glContext = context;
 
-    // TODO: don't create a new window, but do makecurrent and pass
-    //       the context to webrenderer
-    //gGLContext->MakeCurrent();
+      // TODO: don't create a new window, but do makecurrent and pass
+      //       the context to webrenderer
+      // BenWa
+      //gGLContext->MakeCurrent();
 
-    printf_stderr("WR Begin\n");
+      gWebrender.wrState = wr_create();
+      //((mozilla::gl::GLContext *)gWebrender->glContext)->MakeCurrent();
+
+      printf_stderr("WR Begin\n");
+    }
   }
 
   if (!context) {
@@ -1508,6 +1514,23 @@ CompositorOGL::EndFrame()
 
   if (mTexturePool) {
     mTexturePool->EndFrame();
+  }
+
+  // check webrender is activated
+  if (gWebrender.wrState) {
+    static int frame = 0;
+
+    test_rust();
+    wr_dp_begin(gWebrender.wrState);
+    wr_dp_push_rect(gWebrender.wrState, frame++ % 100, frame++ % 100, 100, 100, 1.f, 0.f, 0.f, 1.f);
+  
+    printf_stderr("WR Ending\n");
+    wr_dp_end(gWebrender.wrState);
+    printf_stderr("WR End\n");
+
+    MakeCurrent();
+
+    // draw_test();
   }
 
   mGLContext->SwapBuffers();
