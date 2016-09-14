@@ -99,6 +99,10 @@ GamepadEventChannelParent::ActorDestroy(ActorDestroyReason aWhy)
     service->RemoveChannelParent(this);
   }
   MaybeStopGamepadMonitoring();
+
+  for (uint32_t i = 0; i < mControllers.Length(); ++i) {
+    mControllers[i]->Shutdown();
+  }
 }
 
 void
