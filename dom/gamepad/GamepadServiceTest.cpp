@@ -75,6 +75,7 @@ GamepadServiceTest::GamepadServiceTest(nsPIDOMWindowInner* aWindow)
     mWindow(aWindow),
     mEventNumber(0),
     mShuttingDown(false),
+    mChannel(0),
     mChild(nullptr)
 {}
 
@@ -135,7 +136,7 @@ GamepadServiceTest::AddGamepad(const nsAString& aID,
   uint32_t id = ++mEventNumber;
   if (mChild) {
     mChild->AddPromise(id, p);
-    mChild->SendGamepadTestEvent(id, e);
+    mChild->SendGamepadTestEvent(mChannel, id, e);
   } else {
     PendingOperation op(id, e, p);
     mPendingOperations.AppendElement(op);
@@ -155,7 +156,7 @@ GamepadServiceTest::RemoveGamepad(uint32_t aIndex)
 
   uint32_t id = ++mEventNumber;
   if (mChild) {
-    mChild->SendGamepadTestEvent(id, e);
+    mChild->SendGamepadTestEvent(mChannel, id, e);
   } else {
     PendingOperation op(id, e);
     mPendingOperations.AppendElement(op);
@@ -171,12 +172,13 @@ GamepadServiceTest::NewButtonEvent(uint32_t aIndex,
     return;
   }
 
-  GamepadButtonInformation a(aIndex, aButton, aPressed, aPressed ? 1.0 : 0);
+  GamepadButtonInformation a(aIndex, aButton,
+                             aPressed, aPressed ? 1.0 : 0);
   GamepadChangeEvent e(a);
 
   uint32_t id = ++mEventNumber;
   if (mChild) {
-    mChild->SendGamepadTestEvent(id, e);
+    mChild->SendGamepadTestEvent(mChannel, id, e);
   } else {
     PendingOperation op(id, e);
     mPendingOperations.AppendElement(op);
@@ -193,12 +195,13 @@ GamepadServiceTest::NewButtonValueEvent(uint32_t aIndex,
     return;
   }
 
-  GamepadButtonInformation a(aIndex, aButton, aPressed, aValue);
+  GamepadButtonInformation a(aIndex,
+                            aButton, aPressed, aValue);
   GamepadChangeEvent e(a);
 
   uint32_t id = ++mEventNumber;
   if (mChild) {
-    mChild->SendGamepadTestEvent(id, e);
+    mChild->SendGamepadTestEvent(mChannel, id, e);
   } else {
     PendingOperation op(id, e);
     mPendingOperations.AppendElement(op);
@@ -219,7 +222,7 @@ GamepadServiceTest::NewAxisMoveEvent(uint32_t aIndex,
 
   uint32_t id = ++mEventNumber;
   if (mChild) {
-    mChild->SendGamepadTestEvent(id, e);
+    mChild->SendGamepadTestEvent(mChannel, id, e);
   } else {
     PendingOperation op(id, e);
     mPendingOperations.AppendElement(op);
@@ -234,7 +237,7 @@ GamepadServiceTest::FlushPendingOperations()
     if (op.mPromise) {
       mChild->AddPromise(op.mID, op.mPromise);
     }
-    mChild->SendGamepadTestEvent(op.mID, op.mEvent);
+    mChild->SendGamepadTestEvent(mChannel, op.mID, op.mEvent);
   }
   mPendingOperations.Clear();
 }

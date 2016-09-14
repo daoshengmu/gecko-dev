@@ -18,7 +18,7 @@ class GamepadTestChannelParent final : public PGamepadTestChannelParent
     : mShuttingdown(false) {}
   virtual void ActorDestroy(ActorDestroyReason aWhy) override {}
   virtual bool
-  RecvGamepadTestEvent(const uint32_t& aID,
+  RecvGamepadTestEvent(const uint32_t& aChannel, const uint32_t& aID,
                        const GamepadChangeEvent& aGamepadEvent) override;
   virtual bool
   RecvShutdownChannel() override;

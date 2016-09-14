@@ -200,6 +200,7 @@ class DarwinGamepadService {
  private:
   IOHIDManagerRef mManager;
   vector<Gamepad> mGamepads;
+  uint32_t mChannel;
 
   //Workaround to support running in background thread
   CFRunLoopRef mMonitorRunLoop;
@@ -282,7 +283,7 @@ DarwinGamepadService::DeviceAdded(IOHIDDeviceRef device)
                      sizeof(product_name), kCFStringEncodingASCII);
   char buffer[256];
   sprintf(buffer, "%x-%x-%s", vendorId, productId, product_name);
-  uint32_t index = service->AddGamepad(buffer,
+  uint32_t index = service->AddGamepad(mChannel, buffer,
                                        mozilla::dom::GamepadMappingType::_empty,
                                        (int)mGamepads[slot].numButtons(),
                                        (int)mGamepads[slot].numAxes());
@@ -299,7 +300,7 @@ DarwinGamepadService::DeviceRemoved(IOHIDDeviceRef device)
   }
   for (size_t i = 0; i < mGamepads.size(); i++) {
     if (mGamepads[i] == device) {
-      service->RemoveGamepad(mGamepads[i].mSuperIndex);
+      service->RemoveGamepad(mChannel, mGamepads[i].mSuperIndex);
       mGamepads[i].clear();
       return;
     }
@@ -376,7 +377,7 @@ DarwinGamepadService::InputValueChanged(IOHIDValueRef value)
         const int numButtons = gamepad.numButtons();
         for (unsigned b = 0; b < ArrayLength(newState); b++) {
           if (newState[b] != oldState[b]) {
-            service->NewButtonEvent(gamepad.mSuperIndex,
+            service->NewButtonEvent(mChannel, gamepad.mSuperIndex,
                                     numButtons - 4 + b,
                                     newState[b]);
           }
@@ -386,7 +387,7 @@ DarwinGamepadService::InputValueChanged(IOHIDValueRef value)
         double d = IOHIDValueGetIntegerValue(value);
         double v = 2.0f * (d - axis->min) /
           (double)(axis->max - axis->min) - 1.0f;
-        service->NewAxisMoveEvent(gamepad.mSuperIndex, axis->id, v);
+        service->NewAxisMoveEvent(mChannel, gamepad.mSuperIndex, axis->id, v);
       } else if (const Button* button = gamepad.lookupButton(element)) {
         int iv = IOHIDValueGetIntegerValue(value);
         bool pressed = iv != 0;
@@ -397,7 +398,7 @@ DarwinGamepadService::InputValueChanged(IOHIDValueRef value)
         } else {
           v = pressed ? 1.0 : 0.0;
         }
-        service->NewButtonEvent(gamepad.mSuperIndex, button->id, pressed, v);
+        service->NewButtonEvent(mChannel, gamepad.mSuperIndex, button->id, pressed, v);
       }
       return;
     }
@@ -507,6 +508,12 @@ DarwinGamepadService::StartupInternal()
   CFRelease(criteria);
   CFRelease(criteria_arr[1]);
   CFRelease(criteria_arr[0]);
+
+  RefPtr<GamepadPlatformService> service =
+    GamepadPlatformService::GetParentService();
+  MOZ_ASSERT(service);
+
+  mChannel = service->GetCurrentChannelId();
 
   IOHIDManagerRegisterDeviceMatchingCallback(manager,
                                              DeviceAddedCallback,

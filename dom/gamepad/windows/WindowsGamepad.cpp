@@ -374,8 +374,8 @@ class WindowsGamepadService
 
   nsCOMPtr<nsITimer> mXInputTimer;
   nsCOMPtr<nsITimer> mDeviceChangeTimer;
+  uint32_t mChannel;
 };
-
 
 void
 WindowsGamepadService::ScanForRawInputDevices()
@@ -470,7 +470,8 @@ WindowsGamepadService::ScanForXInputDevices()
                     kXInputGamepad);
     gamepad.userIndex = i;
     gamepad.state = state;
-    gamepad.id = service->AddGamepad("xinput",
+    gamepad.id = service->AddGamepad(mChannel,
+                                     "xinput",
                                      GamepadMappingType::Standard,
                                      kStandardGamepadButtons,
                                      kStandardGamepadAxes);
@@ -511,7 +512,7 @@ WindowsGamepadService::ScanForDevices()
   // Look for devices that are no longer present and remove them.
   for (int i = mGamepads.Length() - 1; i >= 0; i--) {
     if (!mGamepads[i].present) {
-      service->RemoveGamepad(mGamepads[i].id);
+      service->RemoveGamepad(mChannel, mGamepads[i].id);
       mGamepads.RemoveElementAt(i);
     }
   }
@@ -546,11 +547,11 @@ void WindowsGamepadService::CheckXInputChanges(Gamepad& gamepad,
     if (state.Gamepad.wButtons & kXIButtonMap[b].button &&
         !(gamepad.state.Gamepad.wButtons & kXIButtonMap[b].button)) {
       // Button pressed
-      service->NewButtonEvent(gamepad.id, kXIButtonMap[b].mapped, true);
+      service->NewButtonEvent(mChannel, gamepad.id, kXIButtonMap[b].mapped, true);
     } else if (!(state.Gamepad.wButtons & kXIButtonMap[b].button) &&
                gamepad.state.Gamepad.wButtons & kXIButtonMap[b].button) {
       // Button released
-      service->NewButtonEvent(gamepad.id, kXIButtonMap[b].mapped, false);
+      service->NewButtonEvent(mChannel, gamepad.id, kXIButtonMap[b].mapped, false);
     }
   }
 
@@ -558,32 +559,32 @@ void WindowsGamepadService::CheckXInputChanges(Gamepad& gamepad,
   if (state.Gamepad.bLeftTrigger != gamepad.state.Gamepad.bLeftTrigger) {
     bool pressed =
       state.Gamepad.bLeftTrigger >= XINPUT_GAMEPAD_TRIGGER_THRESHOLD;
-    service->NewButtonEvent(gamepad.id, kButtonLeftTrigger,
+    service->NewButtonEvent(mChannel, gamepad.id, kButtonLeftTrigger,
                             pressed, state.Gamepad.bLeftTrigger / 255.0);
   }
   if (state.Gamepad.bRightTrigger != gamepad.state.Gamepad.bRightTrigger) {
     bool pressed =
       state.Gamepad.bRightTrigger >= XINPUT_GAMEPAD_TRIGGER_THRESHOLD;
-    service->NewButtonEvent(gamepad.id, kButtonRightTrigger,
+    service->NewButtonEvent(mChannel, gamepad.id, kButtonRightTrigger,
                             pressed, state.Gamepad.bRightTrigger / 255.0);
   }
 
   // Finally deal with analog sticks
   // TODO: bug 1001955 - Support deadzones.
   if (state.Gamepad.sThumbLX != gamepad.state.Gamepad.sThumbLX) {
-    service->NewAxisMoveEvent(gamepad.id, kLeftStickXAxis,
+    service->NewAxisMoveEvent(mChannel, gamepad.id, kLeftStickXAxis,
                               state.Gamepad.sThumbLX / 32767.0);
   }
   if (state.Gamepad.sThumbLY != gamepad.state.Gamepad.sThumbLY) {
-    service->NewAxisMoveEvent(gamepad.id, kLeftStickYAxis,
+    service->NewAxisMoveEvent(mChannel, gamepad.id, kLeftStickYAxis,
                               -1.0 * state.Gamepad.sThumbLY / 32767.0);
   }
   if (state.Gamepad.sThumbRX != gamepad.state.Gamepad.sThumbRX) {
-    service->NewAxisMoveEvent(gamepad.id, kRightStickXAxis,
+    service->NewAxisMoveEvent(mChannel, gamepad.id, kRightStickXAxis,
                               state.Gamepad.sThumbRX / 32767.0);
   }
   if (state.Gamepad.sThumbRY != gamepad.state.Gamepad.sThumbRY) {
-    service->NewAxisMoveEvent(gamepad.id, kRightStickYAxis,
+    service->NewAxisMoveEvent(mChannel, gamepad.id, kRightStickYAxis,
                               -1.0 * state.Gamepad.sThumbRY / 32767.0);
   }
   gamepad.state = state;
@@ -753,7 +754,8 @@ WindowsGamepadService::GetRawGamepad(HANDLE handle)
     gamepad.axes[i].caps = axes[i];
   }
 
-  gamepad.id = service->AddGamepad(gamepad_id,
+  gamepad.id = service->AddGamepad(mChannel,
+                                   gamepad_id,
                                    GamepadMappingType::_empty,
                                    gamepad.numButtons,
                                    gamepad.numAxes);
@@ -834,7 +836,7 @@ WindowsGamepadService::HandleRawInput(HRAWINPUT handle)
 
   for (unsigned i = 0; i < gamepad->numButtons; i++) {
     if (gamepad->buttons[i] != buttons[i]) {
-      service->NewButtonEvent(gamepad->id, i, buttons[i]);
+      service->NewButtonEvent(mChannel, gamepad->id, i, buttons[i]);
       gamepad->buttons[i] = buttons[i];
     }
   }
@@ -867,7 +869,7 @@ LONG value;
                             gamepad->axes[i].caps.LogicalMax);
     }
     if (gamepad->axes[i].value != new_value) {
-      service->NewAxisMoveEvent(gamepad->id, i, new_value);
+      service->NewAxisMoveEvent(mChannel, gamepad->id, i, new_value);
       gamepad->axes[i].value = new_value;
     }
   }
@@ -878,6 +880,11 @@ LONG value;
 void
 WindowsGamepadService::Startup()
 {
+  RefPtr<GamepadPlatformService> service =
+    GamepadPlatformService::GetParentService();
+  MOZ_ASSERT(service);
+
+  mChannel = service->GetCurrentChannelId();
   ScanForDevices();
 }
 

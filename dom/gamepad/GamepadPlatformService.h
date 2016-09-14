@@ -37,24 +37,24 @@ class GamepadPlatformService final
   static already_AddRefed<GamepadPlatformService> GetParentService();
 
   // Add a gamepad to the list of known gamepads, and return its index.
-  uint32_t AddGamepad(const char* aID, GamepadMappingType aMapping,
+  uint32_t AddGamepad(uint32_t aChannel, const char* aID, GamepadMappingType aMapping,
                       uint32_t aNumButtons, uint32_t aNumAxes);
   // Remove the gamepad at |aIndex| from the list of known gamepads.
-  void RemoveGamepad(uint32_t aIndex);
+  void RemoveGamepad(uint32_t aChannel, uint32_t aIndex);
 
   // Update the state of |aButton| for the gamepad at |aIndex| for all
   // windows that are listening and visible, and fire one of
   // a gamepadbutton{up,down} event at them as well.
   // aPressed is used for digital buttons, aValue is for analog buttons.
-  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
+  void NewButtonEvent(uint32_t aChannel, uint32_t aIndex, uint32_t aButton, bool aPressed,
                       double aValue);
   // When only a digital button is available the value will be synthesized.
-  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed);
+  void NewButtonEvent(uint32_t aChannel, uint32_t aIndex, uint32_t aButton, bool aPressed);
 
   // Update the state of |aAxis| for the gamepad at |aIndex| for all
   // windows that are listening and visible, and fire a gamepadaxismove
   // event at them as well.
-  void NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue);
+  void NewAxisMoveEvent(uint32_t aChannel, uint32_t aIndex, uint32_t aAxis, double aValue);
 
   // When shutting down the platform communications for gamepad, also reset the
   // indexes.
@@ -68,12 +68,14 @@ class GamepadPlatformService final
 
   bool HasGamepadListeners();
 
+  uint32_t GetCurrentChannelId();
+
   void MaybeShutdown();
 
  private:
   GamepadPlatformService();
   ~GamepadPlatformService();
-  template<class T> void NotifyGamepadChange(const T& aInfo);
+  template<class T> void NotifyGamepadChange(uint32_t aChannel, const T& aInfo);
   void Cleanup();
 
   // mGamepadIndex can only be accessed by monitor thread

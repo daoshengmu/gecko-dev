@@ -10,7 +10,7 @@ namespace dom {
 async protocol PGamepadTestChannel {
   manager PBackground;
   parent:
-    async GamepadTestEvent(uint32_t aID, GamepadChangeEvent aGamepadEvent);
+    async GamepadTestEvent(uint32_t aChannel, uint32_t aID, GamepadChangeEvent aGamepadEvent);
     async ShutdownChannel();
   child:
     async __delete__();

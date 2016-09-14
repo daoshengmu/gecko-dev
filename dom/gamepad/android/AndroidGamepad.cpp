@@ -18,6 +18,16 @@ class AndroidGamepadManager final
 
 public:
   static void
+  Startup()
+  {
+    RefPtr<GamepadPlatformService> service =
+    GamepadPlatformService::GetParentService();
+    MOZ_ASSERT(service);
+
+    mChannel = service->GetCurrentChannelId();
+  }
+
+  static void
   OnGamepadChange(int32_t aID, bool aAdded)
   {
     RefPtr<GamepadPlatformService> service =
@@ -28,12 +38,12 @@ public:
 
     if (aAdded) {
       const int svc_id = service->AddGamepad(
-          "android", GamepadMappingType::Standard,
+          mChannel, "android", GamepadMappingType::Standard,
           kStandardGamepadButtons, kStandardGamepadAxes);
       java::AndroidGamepadManager::OnGamepadAdded(aID, svc_id);
 
     } else {
-      service->RemoveGamepad(aID);
+      service->RemoveGamepad(mChannel, aID);
     }
   }
 
@@ -46,7 +56,7 @@ public:
       return;
     }
 
-    service->NewButtonEvent(aID, aButton, aPressed, aValue);
+    service->NewButtonEvent(mChannel, aID, aButton, aPressed, aValue);
   }
 
   static void
@@ -64,14 +74,20 @@ public:
     MOZ_ASSERT(valid.Length() == values.Length());
 
     for (size_t i = 0; i < values.Length(); i++) {
-      service->NewAxisMoveEvent(aID, i, values[i]);
+      service->NewAxisMoveEvent(mChannel, aID, i, values[i]);
     }
   }
+
+private:
+  static uint32_t mChannel;
 };
+
+uint32_t AndroidGamepadManager::mChannel = 0;
 
 void StartGamepadMonitoring()
 {
   AndroidGamepadManager::Init();
+  AndroidGamepadManager::Startup();
   java::AndroidGamepadManager::Start();
 }
 

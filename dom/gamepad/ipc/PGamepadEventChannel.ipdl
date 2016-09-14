@@ -9,8 +9,9 @@ namespace dom {
 
 async protocol PGamepadEventChannel {
   manager PBackground;
+
   parent:
-    async GamepadListenerAdded();
+    async GamepadListenerAdded(uint32_t aChannelType);
     async GamepadListenerRemoved();
   child:
     async __delete__();

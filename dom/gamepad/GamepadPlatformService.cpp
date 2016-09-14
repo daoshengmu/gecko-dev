@@ -58,7 +58,7 @@ GamepadPlatformService::GetParentService()
 
 template<class T>
 void
-GamepadPlatformService::NotifyGamepadChange(const T& aInfo)
+GamepadPlatformService::NotifyGamepadChange(uint32_t aChannel, const T& aInfo)
 {
   // This method is called by monitor populated in
   // platform-dependent backends
@@ -70,13 +70,14 @@ GamepadPlatformService::NotifyGamepadChange(const T& aInfo)
   // mChannelParents may be accessed by background thread in the
   // same time, we use mutex to prevent possible race condtion
   MutexAutoLock autoLock(mMutex);
-  for(uint32_t i = 0; i < mChannelParents.Length(); ++i) {
-    mChannelParents[i]->DispatchUpdateEvent(e);
-  }
+
+  MOZ_ASSERT(aChannel < mChannelParents.Length());
+  mChannelParents[aChannel]->DispatchUpdateEvent(e);
 }
 
 uint32_t
-GamepadPlatformService::AddGamepad(const char* aID,
+GamepadPlatformService::AddGamepad(uint32_t aChannel,
+                                   const char* aID,
                                    GamepadMappingType aMapping,
                                    uint32_t aNumButtons, uint32_t aNumAxes)
 {
@@ -88,55 +89,56 @@ GamepadPlatformService::AddGamepad(const char* aID,
   uint32_t index = ++mGamepadIndex;
   GamepadAdded a(NS_ConvertUTF8toUTF16(nsDependentCString(aID)), index,
                  (uint32_t)aMapping, aNumButtons, aNumAxes);
-  NotifyGamepadChange<GamepadAdded>(a);
+  NotifyGamepadChange<GamepadAdded>(aChannel, a);
   return index;
 }
 
 void
-GamepadPlatformService::RemoveGamepad(uint32_t aIndex)
+GamepadPlatformService::RemoveGamepad(uint32_t aChannel, uint32_t aIndex)
 {
   // This method is called by monitor thread populated in
   // platform-dependent backends
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!NS_IsMainThread());
   GamepadRemoved a(aIndex);
-  NotifyGamepadChange<GamepadRemoved>(a);
+  NotifyGamepadChange<GamepadRemoved>(aChannel, a);
 }
 
 void
-GamepadPlatformService::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
-                                       bool aPressed, double aValue)
+GamepadPlatformService::NewButtonEvent(uint32_t aChannel, uint32_t aIndex,
+                                       uint32_t aButton, bool aPressed,
+                                       double aValue)
 {
   // This method is called by monitor thread populated in
   // platform-dependent backends
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!NS_IsMainThread());
   GamepadButtonInformation a(aIndex, aButton, aPressed, aValue);
-  NotifyGamepadChange<GamepadButtonInformation>(a);
+  NotifyGamepadChange<GamepadButtonInformation>(aChannel, a);
 }
 
 void
-GamepadPlatformService::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
-                                       bool aPressed)
+GamepadPlatformService::NewButtonEvent(uint32_t aChannel, uint32_t aIndex,
+                                       uint32_t aButton, bool aPressed)
 {
   // This method is called by monitor thread populated in
   // platform-dependent backends
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!NS_IsMainThread());
   // When only a digital button is available the value will be synthesized.
-  NewButtonEvent(aIndex, aButton, aPressed, aPressed ? 1.0L : 0.0L);
+  NewButtonEvent(aChannel, aIndex, aButton, aPressed, aPressed ? 1.0L : 0.0L);
 }
 
 void
-GamepadPlatformService::NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
-                                         double aValue)
+GamepadPlatformService::NewAxisMoveEvent(uint32_t aChannel, uint32_t aIndex,
+                                         uint32_t aAxis, double aValue)
 {
   // This method is called by monitor thread populated in
   // platform-dependent backends
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!NS_IsMainThread());
   GamepadAxisInformation a(aIndex, aAxis, aValue);
-  NotifyGamepadChange<GamepadAxisInformation>(a);
+  NotifyGamepadChange<GamepadAxisInformation>(aChannel, a);
 }
 
 void
@@ -192,6 +194,12 @@ GamepadPlatformService::HasGamepadListeners()
     }
   }
   return false;
+}
+
+uint32_t
+GamepadPlatformService::GetCurrentChannelId()
+{
+  return mChannelParents.Length() - 1;
 }
 
 void

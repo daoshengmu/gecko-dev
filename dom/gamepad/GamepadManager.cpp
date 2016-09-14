@@ -581,7 +581,7 @@ GamepadManager::ActorCreated(PBackgroundChild *aActor)
     return;
   }
   MOZ_ASSERT(initedChild == child);
-  child->SendGamepadListenerAdded();
+  child->SendGamepadListenerAdded((uint32_t)GamepadChannel::eStandard);
   mChannelChildren.AppendElement(child);
 
   // TODO: Add more event channels to mChannelChildren if you would

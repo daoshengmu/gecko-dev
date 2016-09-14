@@ -67,6 +67,7 @@ private:
   nsTArray<PendingOperation> mPendingOperations;
   uint32_t mEventNumber;
   bool mShuttingDown;
+  uint32_t mChannel;
 
   // IPDL Channel for us to send test events to GamepadPlatformService, it
   // will only be used in this singleton class and deleted during the IPDL

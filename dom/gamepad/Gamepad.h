@@ -33,6 +33,11 @@ const int kLeftStickYAxis = 1;
 const int kRightStickXAxis = 2;
 const int kRightStickYAxis = 3;
 
+enum GamepadChannel {
+  eStandard,
+  eOpenVR
+};
+
 class Gamepad final : public nsISupports,
                       public nsWrapperCache
 {

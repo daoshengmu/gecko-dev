@@ -11,7 +11,7 @@ namespace mozilla {
 namespace dom {
 
 bool
-GamepadTestChannelParent::RecvGamepadTestEvent(const uint32_t& aID,
+GamepadTestChannelParent::RecvGamepadTestEvent(const uint32_t& aChannel, const uint32_t& aID,
                                                const GamepadChangeEvent& aEvent)
 {
   mozilla::ipc::AssertIsOnBackgroundThread();
@@ -22,7 +22,8 @@ GamepadTestChannelParent::RecvGamepadTestEvent(const uint32_t& aID,
     const GamepadAdded& a = aEvent.get_GamepadAdded();
     nsCString gamepadID;
     LossyCopyUTF16toASCII(a.id(), gamepadID);
-    uint32_t index = service->AddGamepad(gamepadID.get(),
+    uint32_t index = service->AddGamepad(aChannel,
+                                         gamepadID.get(),
                                          (GamepadMappingType)a.mapping(),
                                          a.num_buttons(),
                                          a.num_axes());
@@ -33,17 +34,17 @@ GamepadTestChannelParent::RecvGamepadTestEvent(const uint32_t& aID,
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadRemoved) {
     const GamepadRemoved& a = aEvent.get_GamepadRemoved();
-    service->RemoveGamepad(a.index());
+    service->RemoveGamepad(aChannel, a.index());
     return true;
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadButtonInformation) {
     const GamepadButtonInformation& a = aEvent.get_GamepadButtonInformation();
-    service->NewButtonEvent(a.index(), a.button(), a.pressed(), a.value());
+    service->NewButtonEvent(aChannel, a.index(), a.button(), a.pressed(), a.value());
     return true;
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadAxisInformation) {
     const GamepadAxisInformation& a = aEvent.get_GamepadAxisInformation();
-    service->NewAxisMoveEvent(a.index(), a.axis(), a.value());
+    service->NewAxisMoveEvent(aChannel, a.index(), a.axis(), a.value());
     return true;
   }
 

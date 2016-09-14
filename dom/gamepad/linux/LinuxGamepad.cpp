@@ -78,7 +78,10 @@ private:
   guint mMonitorSourceID;
   // Information about currently connected gamepads.
   AutoTArray<Gamepad,4> mGamepads;
+  static uint32_t mChannel;
 };
+
+uint32_t LinuxGamepadService::mChannel = 0;
 
 // singleton instance
 LinuxGamepadService* gService = nullptr;
@@ -145,7 +148,7 @@ LinuxGamepadService::AddDevice(struct udev_device* dev)
   ioctl(fd, JSIOCGBUTTONS, &numButtons);
   gamepad.numButtons = numButtons;
 
-  gamepad.index = service->AddGamepad(gamepad.idstring,
+  gamepad.index = service->AddGamepad(mChannel, gamepad.idstring,
                                       mozilla::dom::GamepadMappingType::_empty,
                                       gamepad.numButtons,
                                       gamepad.numAxes);
@@ -177,7 +180,7 @@ LinuxGamepadService::RemoveDevice(struct udev_device* dev)
   for (unsigned int i = 0; i < mGamepads.Length(); i++) {
     if (strcmp(mGamepads[i].devpath, devpath) == 0) {
       g_source_remove(mGamepads[i].source_id);
-      service->RemoveGamepad(mGamepads[i].index);
+      service->RemoveGamepad(mChannel, mGamepads[i].index);
       mGamepads.RemoveElementAt(i);
       break;
     }
@@ -254,6 +257,11 @@ LinuxGamepadService::Startup()
   if (!mUdev)
     return;
 
+  RefPtr<GamepadPlatformService> service =
+    GamepadPlatformService::GetParentService();
+  MOZ_ASSERT(service);
+
+  mChannel = service->GetCurrentChannelId();
   AddMonitor();
   ScanForDevices();
 }
@@ -337,10 +345,10 @@ LinuxGamepadService::OnGamepadData(GIOChannel* source,
 
     switch (event.type) {
     case JS_EVENT_BUTTON:
-      service->NewButtonEvent(index, event.number, !!event.value);
+      service->NewButtonEvent(mChannel, index, event.number, !!event.value);
       break;
     case JS_EVENT_AXIS:
-      service->NewAxisMoveEvent(index, event.number,
+      service->NewAxisMoveEvent(mChannel, index, event.number,
                                 ((float)event.value) / kMaxAxisValue);
       break;
     }

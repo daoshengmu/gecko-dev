@@ -50,12 +50,23 @@ GamepadEventChannelParent::GamepadEventChannelParent()
 }
 
 bool
-GamepadEventChannelParent::RecvGamepadListenerAdded()
+GamepadEventChannelParent::RecvGamepadListenerAdded(const uint32_t& aChannelType)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mHasGamepadListener);
+
+  switch (aChannelType) {
+    case GamepadChannel::eStandard:
+    {
+      StartGamepadMonitoring();
+      break;
+    }
+    default:
+      MOZ_ASSERT(false, "Not support this GamepadMappingType");
+      return false;
+  }
+
   mHasGamepadListener = true;
-  StartGamepadMonitoring();
   return true;
 }
 
