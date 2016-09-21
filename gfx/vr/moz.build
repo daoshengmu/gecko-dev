@@ -10,6 +10,7 @@ EXPORTS += [
     'ipc/VRManagerChild.h',
     'ipc/VRManagerParent.h',
     'ipc/VRMessageUtils.h',
+    'openvr/openvr.h',
     'VRDisplayClient.h',
     'VRDisplayPresentation.h',
     'VRManager.h',

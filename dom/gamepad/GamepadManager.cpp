@@ -584,8 +584,25 @@ GamepadManager::ActorCreated(PBackgroundChild *aActor)
   child->SendGamepadListenerAdded((uint32_t)GamepadChannel::eStandard);
   mChannelChildren.AppendElement(child);
 
-  // TODO: Add more event channels to mChannelChildren if you would
-  // like to support more kinds of devices.
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
+  // Add OpenVR gamepad channel
+  nsAdoptingCString openvrPath = Preferences::GetCString("gfx.vr.openvr-runtime");
+  if (!openvrPath)
+    return;
+
+  child = new GamepadEventChannelChild();
+  initedChild =
+	  aActor->SendPGamepadEventChannelConstructor(child);
+  if (NS_WARN_IF(!initedChild)) {
+	  ActorFailed();
+	  return;
+  }
+  MOZ_ASSERT(initedChild == child);
+
+  child->SendRuntimePath(NS_ConvertUTF8toUTF16(openvrPath));
+  child->SendGamepadListenerAdded((uint32_t)GamepadChannel::eOpenVR);
+  mChannelChildren.AppendElement(child);
+#endif
 }
 
 //Override nsIIPCBackgroundChildCreateCallback

@@ -13,6 +13,11 @@ async protocol PGamepadEventChannel {
   parent:
     async GamepadListenerAdded(uint32_t aChannelType);
     async GamepadListenerRemoved();
+    // Because the path of OpenVR runtime it from Preference
+    // that needs be run on the main thread. This temporary
+    // method is getting the path and sending to PBackground
+    // thread via IPC.
+    async RuntimePath(nsString path);
   child:
     async __delete__();
     async GamepadUpdate(GamepadChangeEvent aGamepadEvent);

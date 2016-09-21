@@ -35,7 +35,8 @@ if CONFIG['MOZ_GAMEPAD']:
         'ipc/GamepadEventChannelChild.cpp',
         'ipc/GamepadEventChannelParent.cpp',
         'ipc/GamepadTestChannelChild.cpp',
-        'ipc/GamepadTestChannelParent.cpp'
+        'ipc/GamepadTestChannelParent.cpp',
+        'vr/VRControllerManagerOpenVR.cpp'
         ]
 
     if CONFIG['MOZ_GAMEPAD_BACKEND'] == 'stub':

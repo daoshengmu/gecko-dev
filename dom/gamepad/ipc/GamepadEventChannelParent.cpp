@@ -5,6 +5,7 @@
 #include "GamepadPlatformService.h"
 #include "mozilla/dom/GamepadMonitoring.h"
 #include "nsThreadUtils.h"
+#include "vr/VRControllerManagerOpenVR.h"
 
 namespace mozilla {
 namespace dom {
@@ -61,6 +62,20 @@ GamepadEventChannelParent::RecvGamepadListenerAdded(const uint32_t& aChannelType
       StartGamepadMonitoring();
       break;
     }
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
+    case GamepadChannel::eOpenVR:
+    {
+      RefPtr<VRControllerManager> controllerMgr;
+      controllerMgr = VRContollerManagerOpenVR::Create(mRuntimePath);
+
+      if (!controllerMgr)
+        return false;
+
+      controllerMgr->Startup();
+      mControllers.AppendElement(controllerMgr);
+      break;
+    }
+#endif
     default:
       MOZ_ASSERT(false, "Not support this GamepadMappingType");
       return false;
@@ -74,13 +89,19 @@ bool
 GamepadEventChannelParent::RecvGamepadListenerRemoved()
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mHasGamepadListener);
   mHasGamepadListener = false;
   RefPtr<GamepadPlatformService> service =
     GamepadPlatformService::GetParentService();
   MOZ_ASSERT(service);
   service->RemoveChannelParent(this);
   Unused << Send__delete__(this);
+  return true;
+}
+
+bool
+GamepadEventChannelParent::RecvRuntimePath(const nsString & aPath)
+{
+  mRuntimePath = aPath;
   return true;
 }
 

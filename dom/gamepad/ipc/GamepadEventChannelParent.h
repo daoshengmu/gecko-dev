@@ -20,6 +20,7 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   virtual bool RecvGamepadListenerAdded(const uint32_t& aChannelType) override;
   virtual bool RecvGamepadListenerRemoved() override;
+  virtual bool RecvRuntimePath(const nsString& aPath) override;
   void DispatchUpdateEvent(const GamepadChangeEvent& aEvent);
   bool HasGamepadListener() const { return mHasGamepadListener; }
  private:
@@ -29,6 +30,7 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent
 
   typedef nsTArray<RefPtr<VRControllerManager>> VRControllerManagerArray;
   VRControllerManagerArray mControllers;
+  nsString mRuntimePath;
 };
 
 }// namespace dom
