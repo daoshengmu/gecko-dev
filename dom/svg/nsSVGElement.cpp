@@ -1127,13 +1127,12 @@ bool
 nsSVGElement::IsFocusableInternal(int32_t* aTabIndex, bool)
 {
   int32_t index = TabIndex();
-
-  if (index == -1) {
-    return false;
-  }
-
   *aTabIndex = index;
-  return true;
+
+  // If a tabindex is specified at all, or the tabindex is
+  // larger or equal to 0, we're focusable.
+  return (index >= 0
+      || HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex));
 }
 
 //------------------------------------------------------------------------
