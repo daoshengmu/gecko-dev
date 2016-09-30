@@ -18,6 +18,9 @@
   <text id="t" x="0" y="200" tabindex="2">
         This is SVG text
   </text>
+  <a xlink:href="#" id="l">
+    <circle cx="10" cy="230" r="10"/>
+  </a>
 </svg>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -28,6 +31,7 @@ function main()
   var f = document.getElementById('f');
   var r = document.getElementById('r');
   var t = document.getElementById('t');
+  var l = document.getElementById('l');
 
   try {
     // Step 1: Checking by assigning tabIndex
@@ -43,6 +47,10 @@ function main()
     t.tabIndex = 3;
     is(t.tabIndex, 3, "text is set to 3");
 
+    is(l.tabIndex, 0, "link initial tabIndex");
+    l.tabIndex = 4;
+    is(l.tabIndex, 4, "link is set to 4");
+
     // Step 2: Checking by triggering TAB event
     is(document.activeElement.tabIndex, -1, "In the beginning, the active element tabindex is -1");
 
@@ -54,6 +62,9 @@ function main()
 
     synthesizeKey("VK_TAB", {});
     is(document.activeElement.tabIndex, 3, "The active element tabindex is 3");
+
+    synthesizeKey("VK_TAB", {});
+    is(document.activeElement.tabIndex, 4, "The active element tabindex is 4");
   } catch(e) {
     ok(false, "Got unexpected exception" + e);
   }

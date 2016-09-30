@@ -187,17 +187,25 @@ SVGAElement::IsAttributeMapped(const nsIAtom* name) const
     SVGAElementBase::IsAttributeMapped(name);
 }
 
+int32_t
+SVGAElement::TabIndexDefault()
+{
+  return 0;
+}
+
 bool
 SVGAElement::IsFocusableInternal(int32_t *aTabIndex, bool aWithMouse)
 {
   nsCOMPtr<nsIURI> uri;
+
+  if (nsSVGElement::IsFocusableInternal(aTabIndex, aWithMouse)) {
+    return true;
+  }
+
   if (IsLink(getter_AddRefs(uri))) {
     if (aTabIndex) {
       *aTabIndex = ((sTabFocusModel & eTabFocus_linksMask) == 0 ? -1 : 0);
     }
-    return true;
-  }
-  if (nsSVGElement::IsFocusableInternal(aTabIndex, aWithMouse)) {
     return true;
   }
 
