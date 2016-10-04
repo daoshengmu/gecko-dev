@@ -33,6 +33,15 @@ const int kLeftStickYAxis = 1;
 const int kRightStickXAxis = 2;
 const int kRightStickYAxis = 3;
 
+// Standard channel is used for managing gamepads that
+// are from GamepadPlatformService. VR channel
+// is for gamepads that are from VRManagerChild.
+enum class GamepadChannelType : uint16_t {
+  Standard,
+  VR,
+  NumGamepadChannelType
+};
+
 class Gamepad final : public nsISupports,
                       public nsWrapperCache
 {

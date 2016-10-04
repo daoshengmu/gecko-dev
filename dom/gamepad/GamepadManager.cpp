@@ -50,6 +50,7 @@ const nsTArray<RefPtr<nsGlobalWindow>>::index_type NoIndex =
 bool sShutdown = false;
 
 StaticRefPtr<GamepadManager> gGamepadManagerSingleton;
+const uint32_t VR_GAMEPAD_IDX_OFFSET = 0x01 << 16;
 
 } // namespace
 
@@ -188,10 +189,36 @@ GamepadManager::GetGamepad(uint32_t aIndex) const
   return nullptr;
 }
 
+uint32_t GamepadManager::GetGamepadIndexWithChannel(uint32_t aIndex,
+                                                    GamepadChannelType aChannel)
+{
+  uint32_t newIndex = 0;
+
+  switch (aChannel) {
+    case GamepadChannelType::Standard:
+    {
+     MOZ_ASSERT(aIndex <= VR_GAMEPAD_IDX_OFFSET);
+     newIndex = aIndex;
+     break;
+    }
+    case GamepadChannelType::VR:
+    {
+     newIndex = aIndex + VR_GAMEPAD_IDX_OFFSET;
+     break;
+    }
+    default:
+     MOZ_ASSERT(false);
+     break;
+  }
+
+  return newIndex;
+}
+
 void
 GamepadManager::AddGamepad(uint32_t aIndex,
                            const nsAString& aId,
                            GamepadMappingType aMapping,
+                           GamepadChannelType aChannel,
                            uint32_t aNumButtons,
                            uint32_t aNumAxes)
 {
@@ -204,24 +231,28 @@ GamepadManager::AddGamepad(uint32_t aIndex,
                 aNumButtons,
                 aNumAxes);
 
+  uint32_t newIndex = GetGamepadIndexWithChannel(aIndex, aChannel);
+
   // We store the gamepad related to its index given by the parent process,
   // and no duplicate index is allowed.
-  MOZ_ASSERT(!mGamepads.Get(aIndex, nullptr));
-  mGamepads.Put(aIndex, gamepad);
-  NewConnectionEvent(aIndex, true);
+  MOZ_ASSERT(!mGamepads.Get(newIndex, nullptr));
+  mGamepads.Put(newIndex, gamepad);
+  NewConnectionEvent(newIndex, true);
 }
 
 void
-GamepadManager::RemoveGamepad(uint32_t aIndex)
+GamepadManager::RemoveGamepad(uint32_t aIndex, GamepadChannelType aChannel)
 {
-  RefPtr<Gamepad> gamepad = GetGamepad(aIndex);
+  uint32_t newIndex = GetGamepadIndexWithChannel(aIndex, aChannel);
+
+  RefPtr<Gamepad> gamepad = GetGamepad(newIndex);
   if (!gamepad) {
     NS_WARNING("Trying to delete gamepad with invalid index");
     return;
   }
   gamepad->SetConnected(false);
-  NewConnectionEvent(aIndex, false);
-  mGamepads.Remove(aIndex);
+  NewConnectionEvent(newIndex, false);
+  mGamepads.Remove(newIndex);
 }
 
 void
@@ -544,13 +575,13 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
   if (aEvent.type() == GamepadChangeEvent::TGamepadAdded) {
     const GamepadAdded& a = aEvent.get_GamepadAdded();
     AddGamepad(a.index(), a.id(),
-               static_cast<GamepadMappingType>(a.mapping()),
+               a.mapping(), a.channel(),
                a.num_buttons(), a.num_axes());
     return;
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadRemoved) {
     const GamepadRemoved& a = aEvent.get_GamepadRemoved();
-    RemoveGamepad(a.index());
+    RemoveGamepad(a.index(), a.channel());
     return;
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadButtonInformation) {

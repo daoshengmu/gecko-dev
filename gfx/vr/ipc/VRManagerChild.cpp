@@ -36,6 +36,7 @@ void ReleaseVRManagerParentSingleton() {
 VRManagerChild::VRManagerChild()
   : TextureForwarder()
   , mDisplaysInitialized(false)
+  , mGamepadManager(nullptr)
   , mInputFrameID(-1)
   , mMessageLoop(MessageLoop::current())
   , mFrameRequestCallbackCounter(0)
