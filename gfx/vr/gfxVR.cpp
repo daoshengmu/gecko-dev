@@ -79,9 +79,10 @@ VRControllerManager::AddGamepad(const char* aID,
 
 void
 VRControllerManager::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
-                                    bool aPressed, double aValue)
+                                    bool aPressed)
 {
-  dom::GamepadButtonInformation a(aIndex, aButton, aPressed, aValue);
+  dom::GamepadButtonInformation a(aIndex, dom::GamepadChannelType::VR,
+                                  aButton, aPressed, aPressed ? 1.0L : 0.0L);
 
   VRManager* vm = VRManager::Get();
   MOZ_ASSERT(vm);
