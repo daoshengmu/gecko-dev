@@ -122,6 +122,8 @@ private:
 
   virtual void HandleButtonPress(uint32_t aControllerIdx,
                                  uint64_t aButtonPressed) override;
+  virtual void HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
+                              float aValue, int32_t aInvert) override;
 
   bool mOpenVRInstalled;
   nsTArray<RefPtr<impl::VRControllerOpenVR>> mOpenVRController;

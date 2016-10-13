@@ -69,12 +69,30 @@ const nsTArray<uint64_t> gOpenVRButtonMask = {
   vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_SteamVR_Trigger)
 };
 
-const nsTArray<uint64_t> gOpenVRAxisMask = {
-  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis0),
-  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis1),
-  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis2),
-  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis3),
-  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Axis4)
+enum class VRControllerAxisType : uint16_t {
+  TrackpadXAxis,
+  TrackpadYAxis,
+  Trigger,
+  NumVRControllerAxisType
+};
+
+const uint32_t kNumVRControllerAxis = static_cast<uint32_t>
+                                      (VRControllerAxisType::NumVRControllerAxisType);
+
+struct VRControllerAxisInfo
+{
+  uint32_t mIdx;
+  int32_t mInvert;
+
+  VRControllerAxisInfo(vr::EVRButtonId aId, uint32_t aInvert)
+    : mIdx(aId - vr::EVRButtonId::k_EButton_Axis0), mInvert(aInvert) {}
+};
+
+const nsTArray<VRControllerAxisInfo>
+gOpenVRAxes = {
+  VRControllerAxisInfo(vr::EVRButtonId::k_EButton_Axis0, 1),
+  VRControllerAxisInfo(vr::EVRButtonId::k_EButton_Axis0, -1),
+  VRControllerAxisInfo(vr::EVRButtonId::k_EButton_Axis1, 1)
 };
 
 bool
@@ -473,7 +491,7 @@ VRControllerOpenVR::VRControllerOpenVR()
   mControllerInfo.mControllerName.AssignLiteral("OpenVR HMD");
   mControllerInfo.mMappingType = dom::GamepadMappingType::_empty;
   mControllerInfo.mNumButtons = gOpenVRButtonMask.Length();
-  mControllerInfo.mNumAxes = gOpenVRAxisMask.Length();
+  mControllerInfo.mNumAxes = kNumVRControllerAxis;
 }
 
 VRControllerOpenVR::~VRControllerOpenVR()
@@ -553,8 +571,10 @@ VRControllerManagerOpenVR::HandleInput()
 {
   RefPtr<impl::VRControllerOpenVR> controller;
   vr::VRControllerState_t state;
+  uint32_t axis = 0;
 
   MOZ_ASSERT(mVRSystem);
+  MOZ_ASSERT(kNumVRControllerAxis == gOpenVRAxes.Length());
 
   // Process OpenVR controller state
   for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
@@ -568,7 +588,20 @@ VRControllerManagerOpenVR::HandleInput()
         HandleButtonPress(controller->GetIndex(), state.ulButtonPressed);
       }
 
-      // Handle Axis support in Bug 1299930
+      axis = static_cast<uint32_t>(VRControllerAxisType::TrackpadXAxis);
+      VRControllerAxisInfo axisInfo(gOpenVRAxes[axis]);
+      HandleAxisMove(controller->GetIndex(), axis,
+                     state.rAxis[axisInfo.mIdx].x, axisInfo.mInvert);
+
+      axis = static_cast<uint32_t>(VRControllerAxisType::TrackpadYAxis);
+      axisInfo = gOpenVRAxes[axis];
+      HandleAxisMove(controller->GetIndex(), axis,
+                     state.rAxis[axisInfo.mIdx].y, axisInfo.mInvert);
+
+      axis = static_cast<uint32_t>(VRControllerAxisType::Trigger);
+      axisInfo = gOpenVRAxes[axis];
+      HandleAxisMove(controller->GetIndex(), axis,
+                     state.rAxis[axisInfo.mIdx].x, axisInfo.mInvert);
     }
   }
 }
@@ -582,6 +615,16 @@ VRControllerManagerOpenVR::HandleButtonPress(uint32_t aControllerIdx,
   for (uint32_t i = 0; i < gOpenVRButtonMask.Length(); ++i) {
     buttonMask = gOpenVRButtonMask[i];
     NewButtonEvent(aControllerIdx, i, aButtonPressed & buttonMask);
+  }
+}
+
+void
+VRControllerManagerOpenVR::HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
+                                          float aValue, int32_t aInvert)
+{
+  if (aValue != 0.0f) {
+    printf_stderr("controller %d axis %d value %f \n", aControllerIdx, aAxis, aValue * aInvert);
+    NewAxisMove(aControllerIdx, aAxis, aValue * aInvert);
   }
 }
 
@@ -625,7 +668,7 @@ VRControllerManagerOpenVR::ScanForDevices()
 
     // Not already present, add it.
     AddGamepad("OpenVR Gamepad", GamepadMappingType::_empty,
-               gOpenVRButtonMask.Length(), gOpenVRAxisMask.Length());
+               gOpenVRButtonMask.Length(), kNumVRControllerAxis);
     ++mControllerCount;
   }
 }
