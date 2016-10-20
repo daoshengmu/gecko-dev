@@ -24,7 +24,11 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
 #include "openvr/openvr.h"
-#include "mozilla/dom/Gamepad.h"
+
+#ifdef MOZ_GAMEPAD
+#include "mozilla/dom/GamepadEventTypes.h"
+#include "mozilla/dom/GamepadBinding.h"
+#endif
 
 #ifndef M_PI
 # define M_PI 3.14159265358979323846
@@ -574,10 +578,11 @@ VRControllerManagerOpenVR::ScanForDevices()
 
     RefPtr<VRControllerOpenVR> openVRController = new VRControllerOpenVR();
     mOpenVRController.AppendElement(openVRController);
-
+#ifdef MOZ_GAMEPAD
     // Not already present, add it.
-    AddGamepad("OpenVR Gamepad", GamepadMappingType::_empty,
+    AddGamepad("OpenVR Gamepad", static_cast<uint32_t>(GamepadMappingType::_empty),
                kOpenVRControllerAxes, kOpenVRControllerButtons);
+#endif
     ++mControllerCount;
   }
 }
