@@ -10,6 +10,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/dom/GamepadButton.h"
+#include "mozilla/dom/GamepadPose.h"
 #include "mozilla/dom/Performance.h"
 #include <stdint.h>
 #include "nsCOMPtr.h"
@@ -107,6 +108,11 @@ public:
     aAxes = mAxes;
   }
 
+  GamepadPose* GetPose() const
+  {
+    return mGamepadPose;
+  }
+
 private:
   virtual ~Gamepad() {}
   void UpdateTimestamp();
@@ -126,6 +132,7 @@ protected:
   nsTArray<RefPtr<GamepadButton>> mButtons;
   nsTArray<double> mAxes;
   DOMHighResTimeStamp mTimestamp;
+  RefPtr<GamepadPose> mGamepadPose;
 };
 
 } // namespace dom

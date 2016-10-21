@@ -193,6 +193,8 @@ pref("dom.gamepad.non_standard_events.enabled", false);
 #else
 pref("dom.gamepad.non_standard_events.enabled", true);
 #endif
+// TODO: turn to false for landing.
+pref("dom.gamepad.extensions.enabled", true);
 
 // Whether the KeyboardEvent.code is enabled
 pref("dom.keyboardevent.code.enabled", true);
