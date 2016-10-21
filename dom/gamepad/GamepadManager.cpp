@@ -379,6 +379,14 @@ GamepadManager::NewAxisMoveEvent(uint32_t aIndex, GamepadChannelType aChannel,
 }
 
 void
+GamepadManager::NewPoseEvent(uint32_t aIndex, GamepadChannelType aChannel
+                            //, const GamepadPosState& aState
+                            )
+{
+
+}
+
+void
 GamepadManager::FireAxisMoveEvent(EventTarget* aTarget,
                                   Gamepad* aGamepad,
                                   uint32_t aAxis,
@@ -606,6 +614,11 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
     NewAxisMoveEvent(a.index(), a.channel(), a.axis(), a.value());
     return;
   }
+  if (aEvent.type() == GamepadChangeEvent::TGamepadPoseInformation) {
+    const GamepadPoseInformation& a = aEvent.get_GamepadPoseInformation();
+    NewPoseEvent(a.index(), a.channel()/*, GamepadPoseState()*/);
+    return;
+  } 
 
   MOZ_CRASH("We shouldn't be here!");
 

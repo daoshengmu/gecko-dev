@@ -88,6 +88,12 @@ Gamepad::SetAxis(uint32_t aAxis, double aValue)
 }
 
 void
+Gamepad::SetPose(const GamepadPoseState& aPose)
+{
+  // mGamepadPose
+}
+
+void
 Gamepad::SyncState(Gamepad* aOther)
 {
   if (mButtons.Length() != aOther->mButtons.Length() ||

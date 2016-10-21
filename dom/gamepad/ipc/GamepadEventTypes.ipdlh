@@ -38,11 +38,18 @@ struct GamepadButtonInformation {
   double value;
 };
 
+struct GamepadPoseInformation {
+  uint32_t index;
+  GamepadChannelType channel;
+  // TODO: Add GamepadPose
+};
+
 union GamepadChangeEvent {
   GamepadAdded;
   GamepadRemoved;
   GamepadAxisInformation;
   GamepadButtonInformation;
+  GamepadPoseInformation;
 };
 
 } // namespace dom

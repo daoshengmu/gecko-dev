@@ -43,6 +43,20 @@ enum class GamepadChannelType : uint16_t {
   NumGamepadChannelType
 };
 
+struct GamepadPoseState
+{
+  float orientation[4];
+  float position[3];
+  float angularVelocity[3];
+  float angularAcceleration[3];
+  float linearVelocity[3];
+  float linearAcceleration[3];
+
+  void Clear() {
+    memset(this, 0, sizeof(GamepadPoseState));
+  }
+};
+
 class Gamepad final : public nsISupports,
                       public nsWrapperCache
 {
@@ -58,6 +72,7 @@ public:
   void SetButton(uint32_t aButton, bool aPressed, double aValue);
   void SetAxis(uint32_t aAxis, double aValue);
   void SetIndex(uint32_t aIndex);
+  void SetPose(const GamepadPoseState& aPose);
 
   // Make the state of this gamepad equivalent to other.
   void SyncState(Gamepad* aOther);

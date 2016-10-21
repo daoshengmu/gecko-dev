@@ -24,6 +24,7 @@ class EventTarget;
 class Gamepad;
 class GamepadChangeEvent;
 class GamepadEventChannelChild;
+class GamepadPosState;
 
 class GamepadManager final : public nsIObserver,
                              public nsIIPCBackgroundChildCreateCallback
@@ -67,6 +68,10 @@ class GamepadManager final : public nsIObserver,
   // event at them as well.
   void NewAxisMoveEvent(uint32_t aIndex, GamepadChannelType aChannel,
                         uint32_t aAxis, double aValue);
+
+  void NewPoseEvent(uint32_t aIndex, GamepadChannelType aChannel
+                    //, const GamepadPosState& aState
+                    );
 
   // Synchronize the state of |aGamepad| to match the gamepad stored at |aIndex|
   void SyncGamepadState(uint32_t aIndex, Gamepad* aGamepad);
