@@ -19,6 +19,8 @@ namespace mozilla {
 using namespace layers;
 namespace gfx {
 
+base::ProcessId VRManagerParent::mContentProcessId = 0;
+
 VRManagerParent::VRManagerParent(ProcessId aChildProcessId)
   : HostIPCAllocator()
   , mHaveEventListener(false)
@@ -157,6 +159,7 @@ VRManagerParent::CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint)
   MessageLoop* loop = layers::CompositorThreadHolder::Loop();
 
   RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid());
+  mContentProcessId = aEndpoint.OtherPid();
   loop->PostTask(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
     vmp, &VRManagerParent::Bind, Move(aEndpoint)));
 
@@ -313,6 +316,19 @@ VRManagerParent::RecvGetControllers(nsTArray<VRControllerInfo> *aControllers)
   VRManager* vm = VRManager::Get();
   vm->GetVRControllerInfo(*aControllers);
   return IPC_OK();
+}
+
+bool
+VRManagerParent::SendGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
+{
+  // Due to GamepadManager only exists at the content process
+  // or the same process in non-e10s mode.
+  if (mContentProcessId == GetChildProcessId() || IsSameProcess())
+  {
+    return PVRManagerParent::SendGamepadUpdate(aGamepadEvent);
+  } else {
+    return true;
+  }
 }
 
 } // namespace gfx
