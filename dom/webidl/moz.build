@@ -539,6 +539,7 @@ WEBIDL_FILES = [
     'Function.webidl',
     'GainNode.webidl',
     'Gamepad.webidl',
+    'GamepadHapticActuator.webidl',
     'GamepadPose.webidl',
     'GamepadServiceTest.webidl',
     'Geolocation.webidl',
