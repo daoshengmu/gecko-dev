@@ -1256,7 +1256,6 @@ VRSystemManagerOculus::ScanForControllers()
           break;
       }
       RefPtr<VRControllerOculus> oculusController = new VRControllerOculus(hand);
-      oculusController->SetIndex(mControllerCount);
       mOculusController.AppendElement(oculusController);
 
       // Not already present, add it.
