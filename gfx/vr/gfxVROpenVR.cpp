@@ -922,12 +922,7 @@ VRSystemManagerOpenVR::ScanForControllers()
   }
 
   if (newControllerCount != mControllerCount) {
-    // The controller count is changed, removing the existing gamepads first.
-    for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
-      RemoveGamepad(i);
-    }
-    mControllerCount = 0;
-    mOpenVRController.Clear();
+    RemoveControllers();
 
     // Re-adding controllers to VRControllerManager.
     for (::vr::TrackedDeviceIndex_t i = 0; i < newControllerCount; ++i) {
@@ -1005,6 +1000,10 @@ VRSystemManagerOpenVR::ScanForControllers()
 void
 VRSystemManagerOpenVR::RemoveControllers()
 {
+  // The controller count is changed, removing the existing gamepads first.
+  for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
+    RemoveGamepad(i);
+  }
   mOpenVRController.Clear();
   mControllerCount = 0;
 }
