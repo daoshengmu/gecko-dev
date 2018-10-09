@@ -10,14 +10,11 @@
 #include "VRSession.h"
 
 #include "openvr.h"
-#include "mozilla/gfx/2D.h"
 #include "mozilla/TimeStamp.h"
 #include "moz_external_vr.h"
 
 #if defined(XP_WIN)
 #include <d3d11_1.h>
-#elif defined(XP_MACOSX)
-class MacIOSurface;
 #endif
 class nsITimer;
 
@@ -67,7 +64,7 @@ private:
   void UpdateControllerButtons(VRSystemState& aState);
   void UpdateTelemetry(VRSystemState& aSystemState);
 
-  bool SubmitFrame(void* aTextureHandle,
+  bool SubmitFrame(const VRLayerTextureHandle& aTextureHandle,
                    ::vr::ETextureType aTextureType,
                    const VRLayerEyeRect& aLeftEyeRect,
                    const VRLayerEyeRect& aRightEyeRect);
@@ -88,7 +85,7 @@ private:
   mozilla::Mutex mControllerHapticStateMutex;
 };
 
-} // namespace mozilla
 } // namespace gfx
+} // namespace mozilla
 
 #endif // GFX_VR_SERVICE_OPENVRSESSION_H

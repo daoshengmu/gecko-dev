@@ -18,8 +18,6 @@
 
 #if defined(XP_WIN)
 #include <d3d11_1.h>
-#elif defined(XP_MACOSX)
-class MacIOSurface;
 #endif
 
 namespace mozilla {

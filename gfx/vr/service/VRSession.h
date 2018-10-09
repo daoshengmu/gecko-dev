@@ -7,14 +7,10 @@
 #ifndef GFX_VR_SERVICE_VRSESSION_H
 #define GFX_VR_SERVICE_VRSESSION_H
 
-#include "VRSession.h"
-
 #include "moz_external_vr.h"
 
 #if defined(XP_WIN)
 #include <d3d11_1.h>
-#elif defined(XP_MACOSX)
-class MacIOSurface;
 #endif
 
 namespace mozilla {
