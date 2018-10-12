@@ -7,6 +7,7 @@
 
 #include "VRManager.h"
 #include "VRManagerParent.h"
+#include "VRProcessManager.h"
 #include "VRGPUChild.h"
 #include "VRThread.h"
 #include "gfxVR.h"
@@ -104,11 +105,26 @@ VRManager::VRManager()
   // and replaces the other VRSystemManager when enabled.
   if (!gfxPrefs::VRProcessEnabled()) {
     mVRService = VRService::Create();
-  } else if (gfxPrefs::VRProcessEnabled() && XRE_IsGPUProcess()) {
+  }
+ #if defined(XP_WIN)
+  // GPU process only be launched on Windows.
+  else if (gfxPrefs::VRProcessEnabled() && XRE_IsGPUProcess()) {
     gfx::GPUParent* gpu = GPUParent::GetSingleton();
     MOZ_ASSERT(gpu);
     Unused << gpu->SendCreateVRProcess();
   }
+ #else
+  // Other platforms launch VR process in the main process.
+  else if (XRE_IsParentProcess() && gfxPrefs::VRProcessEnabled()) {
+    VRProcessManager::Initialize();
+    VRProcessManager* vr = VRProcessManager::Get();
+    MOZ_ASSERT(vr, "VRProcessManager must be initialized first.");
+
+    if (vr) {
+      vr->LaunchVRProcess();
+    }
+  }
+ #endif
   if (mVRService) {
     mExternalManager = VRSystemManagerExternal::Create(mVRService->GetAPIShmem());
   }

@@ -116,7 +116,8 @@ VRProcessParent::InitAfterConnect(bool aSucceeded)
     MOZ_ASSERT(rv);
 
     mVRChild->Init();
-
+    // Only Windows has GPU process.
+#if defined (XP_WIN)
     // Make vr-gpu process connection
     GPUChild* gpuChild = GPUProcessManager::Get()->GetGPUChild();
     MOZ_ASSERT(gpuChild);
@@ -127,6 +128,15 @@ VRProcessParent::InitAfterConnect(bool aSucceeded)
     MOZ_ASSERT(opened);
 
     Unused << gpuChild->SendInitVR(std::move(vrGPUBridge));
+#else
+    Endpoint<PVRGPUChild> vrGPUBridge;
+    VRProcessManager* vpm = VRProcessManager::Get();
+    // Make the bridge connection between the main & VR process.
+    DebugOnly<bool> opened = vpm->CreateGPUBridges(base::GetCurrentProcId(), &vrGPUBridge);
+    MOZ_ASSERT(opened);
+
+    gfx::VRGPUChild::InitForGPUProcess(std::move(vrGPUBridge));
+#endif
   }
 }
 
