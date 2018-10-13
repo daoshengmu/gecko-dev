@@ -14,6 +14,14 @@
 #include "OSVRSession.h"
 #endif
 
+#if defined(XP_MACOSX)
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <fcntl.h>           /* For O_* constants */
+#include <errno.h>
+#include <unistd.h>
+#endif
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace std;
@@ -145,6 +153,9 @@ VRService::Stop()
   if (gfxPrefs::VRProcessEnabled() && mAPIShmem) {
 #if defined(XP_WIN)
     UnmapViewOfFile((void *)mAPIShmem);
+#elif defined(XP_MACOSX)
+    // TODO: confirm it.
+    munmap(mAPIShmem, sizeof(VRExternalShmem));
 #endif
     mAPIShmem = nullptr;
   }
@@ -184,8 +195,22 @@ VRService::InitShmem()
     MOZ_ASSERT(mAPIShmem);
     return false;
   }
-#else
-  // TODO: Implement shmem for other platforms.
+#elif defined(XP_MACOSX)
+  const char* kShmemName = "/moz.gecko.vr_ext.0.0.1";
+  const size_t length = sizeof(VRExternalShmem);
+  base::ProcessHandle targetHandle = shm_open(kShmemName, O_RDWR, S_IRUSR | S_IWUSR);
+  if (targetHandle == -1) {
+    // TODO - Implement logging
+    MOZ_ASSERT(false);
+    return false;
+  }
+  // map shared memory to access
+  mAPIShmem = (VRExternalShmem *)mmap(NULL, length, PROT_READ|PROT_WRITE, MAP_SHARED, targetHandle, 0);
+  if (mAPIShmem == MAP_FAILED) {
+    mAPIShmem = NULL;
+    return false;
+  }
+  mTargetShmemFile = targetHandle;
 #endif
 
  return true;

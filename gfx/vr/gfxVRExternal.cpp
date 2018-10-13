@@ -18,9 +18,7 @@
 #include "TextureD3D11.h"
 static const char* kShmemName = "moz.gecko.vr_ext.0.0.1";
 #elif defined(XP_MACOSX)
-#include "mozilla/gfx/MacIOSurface.h"
 #include <sys/mman.h>
-#include <sys/stat.h>        /* For mode constants */
 #include <fcntl.h>           /* For O_* constants */
 #include <errno.h>
 static const char* kShmemName = "/moz.gecko.vr_ext.0.0.1";
@@ -488,17 +486,23 @@ VRSystemManagerExternal::OpenShmem()
 
 #if defined(XP_MACOSX)
   if (mShmemFD == 0) {
-    mShmemFD = shm_open(kShmemName, O_RDWR, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
+    shm_unlink(kShmemName); // Close the previous memory access handle.
+    // TODO: try avoid giving others privilege.
+    mShmemFD = shm_open(kShmemName, O_RDWR | O_CREAT | O_EXCL, 
+                        S_IROTH | S_IWOTH   // others hav read/write permission
+                        | S_IRUSR | S_IWUSR // I have read/write permission
+                       );
   }
-  if (mShmemFD <= 0) {
-    mShmemFD = 0;
+  
+  if (mShmemFD == -1) {
+    CloseShmem();
+    MOZ_ASSERT(false);
     return;
   }
 
-  struct stat sb;
-  fstat(mShmemFD, &sb);
-  off_t length = sb.st_size;
-  if (length < (off_t)sizeof(VRExternalShmem)) {
+  const off_t length = sizeof(VRExternalShmem);
+  int result = ftruncate(mShmemFD, length);
+  if (result == -1) {
     // TODO - Implement logging
     CloseShmem();
     return;
@@ -511,7 +515,6 @@ VRSystemManagerExternal::OpenShmem()
     CloseShmem();
     return;
   }
-
 #elif defined(XP_WIN)
   if (mShmemFile == NULL) {
     if (gfxPrefs::VRProcessEnabled()) {
@@ -600,6 +603,7 @@ VRSystemManagerExternal::CloseShmem()
   }
   if (mShmemFD) {
     close(mShmemFD);
+    shm_unlink(kShmemName);
   }
   mShmemFD = 0;
 #elif defined(XP_WIN)
