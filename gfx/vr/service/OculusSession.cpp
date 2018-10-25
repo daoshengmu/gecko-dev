@@ -236,6 +236,10 @@ OculusSession::~OculusSession()
 bool
 OculusSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
 {
+  if (!LoadOvrLib()) {
+    return false;
+  }
+
   if (!CreateD3DObjects()) {
     return false;
   }
@@ -243,9 +247,6 @@ OculusSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
     return false;
   }
 
-  if (!LoadOvrLib()) {
-    return false;
-  }
   // We start off with an invisible session, then re-initialize
   // with visible session once WebVR content starts rendering.
   if (!ChangeVisibility(false)) {
