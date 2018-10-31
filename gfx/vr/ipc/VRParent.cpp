@@ -11,6 +11,8 @@
 
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/ipc/CrashReporterClient.h"
+#include "nsDebugImpl.h"
 
 #if defined(XP_WIN)
 #include "mozilla/gfx/DeviceManagerDx.h"
@@ -105,6 +107,7 @@ VRParent::ActorDestroy(ActorDestroyReason aWhy)
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
   gfxPrefs::DestroySingleton();
+  CrashReporterClient::DestroySingleton();
   XRE_ShutdownChildProcess();
 }
 
@@ -119,6 +122,8 @@ VRParent::Init(base::ProcessId aParentPid,
     return false;
   }
 
+  nsDebugImpl::SetMultiprocessMode("VR");
+
   // This must be checked before any IPDL message, which may hit sentinel
   // errors due to parent and content processes having different
   // versions.
@@ -128,6 +133,9 @@ VRParent::Init(base::ProcessId aParentPid,
     // This can occur when an update occurred in the background.
     ProcessChild::QuickExit();
   }
+
+  // Init crash reporter support.
+  CrashReporterClient::InitSingleton(this);
 
   // Ensure gfxPrefs are initialized.
   gfxPrefs::GetSingleton();

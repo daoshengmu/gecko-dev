@@ -11,6 +11,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/VsyncDispatcher.h"
+#include "mozilla/ipc/CrashReporterHost.h"
 
 namespace mozilla {
 namespace gfx {
@@ -65,6 +66,17 @@ void
 VRChild::OnVarChanged(const GfxVarUpdate& aVar)
 {
   SendUpdateVar(aVar);
+}
+
+mozilla::ipc::IPCResult
+VRChild::RecvInitCrashReporter(Shmem&& aShmem, const NativeThreadId& aThreadId)
+{
+  mCrashReporter = MakeUnique<ipc::CrashReporterHost>(
+    GeckoProcessType_VR,
+    aShmem,
+    aThreadId);
+
+  return IPC_OK();
 }
 
 class DeferredDeleteVRChild : public Runnable

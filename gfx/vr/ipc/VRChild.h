@@ -12,6 +12,9 @@
 #include "mozilla/VsyncDispatcher.h"
 
 namespace mozilla {
+namespace ipc {
+class CrashReporterHost;
+} // namespace ipc
 namespace gfx {
 
 class VRProcessParent;
@@ -29,11 +32,15 @@ public:
   void Init();
   virtual void OnVarChanged(const GfxVarUpdate& aVar) override;
 
+  mozilla::ipc::IPCResult RecvInitCrashReporter(Shmem&& shmem,
+                                                const NativeThreadId& aThreadId) override;
+
 protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:
   VRProcessParent* mHost;
+  UniquePtr<ipc::CrashReporterHost> mCrashReporter;
 };
 
 } // namespace gfx
