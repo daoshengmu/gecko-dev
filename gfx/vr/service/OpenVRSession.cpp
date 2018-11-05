@@ -157,6 +157,10 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
     return false;
   }
 
+  // Setting controller actions
+  // vr::VRInput()->SetActionManifestPath(
+  //   Path_MakeAbsolute( "../hellovr_actions.json", Path_StripFilename( Path_GetExecutablePath() ) ).c_str() );
+
   StartHapticThread();
   StartHapticTimer();
   
