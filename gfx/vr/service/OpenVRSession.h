@@ -67,7 +67,9 @@ private:
   void UpdateHeadsetPose(mozilla::gfx::VRSystemState& aState);
   void EnumerateControllers(VRSystemState& aState);
   void UpdateControllerPoses(VRSystemState& aState);
+  void UpdateControllerPosesObsolete(VRSystemState& aState);
   void UpdateControllerButtons(VRSystemState& aState);
+  void UpdateControllerButtonsObsolete(VRSystemState& aState);
   void UpdateTelemetry(VRSystemState& aSystemState);
 
   bool SubmitFrame(const VRLayerTextureHandle& aTextureHandle,
@@ -81,6 +83,7 @@ private:
                              ::vr::TrackedDeviceIndex_t aDeviceIndex,
                              nsCString& aId);
   void UpdateHaptics();
+  void UpdateHapticsObsolete();
   void StartHapticThread();
   void StopHapticThread();
   void StartHapticTimer();
