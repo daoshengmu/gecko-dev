@@ -220,17 +220,8 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
   }
 
   if (gfxPrefs::VROpenVRActionInputEnabled()) {
-    std::string bindingFileName =
-      std::tmpnam(nullptr); // Create and open a temp file
-
-    /* int nsize = 11;
-      char *somedata;
-      std::fstream myfile;
-      myfile.open(bindingFileName,
-                  std::fstream::in | std::fstream::out);
-      myfile.write("hello world",nsize);
-      myfile.read(somedata,nsize);
-      myfile.close();*/
+    // Create and open a temp file
+    std::string viveBindingFileName = std::tmpnam(nullptr);
 
     // TODO: Write it to profile folder.
 
@@ -240,9 +231,8 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
       " \n"
       "{\n"
       "  \"controller_type\" : \"vive_controller\", \n"
-      "  \"description\" : \"Bindings for the OpenVR SDK hellovr_opengl "
-      "firefox for the Vive controller\", \n"
-      "  \"name\" : \"HelloVR bindings for Vive Controller\", \n"
+      "  \"description\" : \"Bindings for Firefox OpenVR for the Vive controller\", \n"
+      "  \"name\" : \"Firefox bindings for Vive Controller\", \n"
       "  \"bindings\" : { \n"
       "     \"/actions/firefox\" : { \n"
       "         \"poses\" : [        \n"
@@ -269,12 +259,10 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
       "           {\n"
       "             \"inputs\" : { \n"
       "                 \"click\" : { \n"
-      "                    \"output\" : "
-      "\"/actions/firefox/in/LHand_menu_pressed\"  \n"
+      "                    \"output\" : \"/actions/firefox/in/LHand_menu_pressed\"  \n"
       "                   }, \n"
       "                 \"touch\" : { \n"
-      "                    \"output\" : "
-      "\"/actions/firefox/in/LHand_menu_touched\"  \n"
+      "                    \"output\" : \"/actions/firefox/in/LHand_menu_touched\"  \n"
       "                   } \n"
       "              },\n"
       "             \"mode\" : \"button\", \n"
@@ -283,12 +271,10 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
       "           {\n"
       "             \"inputs\" : { \n"
       "                 \"click\" : { \n"
-      "                    \"output\" : "
-      "\"/actions/firefox/in/RHand_menu_pressed\"  \n"
+      "                    \"output\" : \"/actions/firefox/in/RHand_menu_pressed\"  \n"
       "                   }, \n"
       "                 \"touch\" : { \n"
-      "                    \"output\" : "
-      "\"/actions/firefox/in/RHand_menu_touched\"  \n"
+      "                    \"output\" : \"/actions/firefox/in/RHand_menu_touched\"  \n"
       "                   } \n"
       "              },\n"
       "             \"mode\" : \"button\", \n"
@@ -297,8 +283,7 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
       "           {\n"
       "             \"inputs\" : { \n"
       "                 \"pull\" : { \n"
-      "                    \"output\" : "
-      "\"/actions/firefox/in/LHand_trigger_value\"  \n"
+      "                    \"output\" : \"/actions/firefox/in/LHand_trigger_value\"  \n"
       "                   } \n"
       "              },\n"
       "             \"mode\" : \"trigger\", \n"
@@ -307,8 +292,7 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
       "           {\n"
       "             \"inputs\" : { \n"
       "                 \"pull\" : { \n"
-      "                    \"output\" : "
-      "\"/actions/firefox/in/RHand_trigger_value\"  \n"
+      "                    \"output\" : \"/actions/firefox/in/RHand_trigger_value\"  \n"
       "                   } \n"
       "              },\n"
       "             \"mode\" : \"trigger\", \n"
@@ -317,46 +301,38 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
       "           {\n"
       "             \"inputs\" : { \n"
       "               \"click\" : { \n"
-      "                \"output\" : \"/actions/firefox/in/LHand_grip_pressed\" "
-      "\n"
+      "                \"output\" : \"/actions/firefox/in/LHand_grip_pressed\" \n"
       "              }, \n"
       "               \"touch\" : { \n"
       "                 \"output\" : "
-      "\"/actions/firefox/in/LHand_grip_touched\" \n"
+      "                  \"/actions/firefox/in/LHand_grip_touched\" \n"
       "              } \n"
       "             }, \n"
       "				      \"mode\" : \"button\", \n"
-      "				      \"path\" : "
-      "\"/user/hand/left/input/grip\" \n"
+      "				      \"path\" : \"/user/hand/left/input/grip\" \n"
       "           }, \n"
       "           {\n"
       "             \"inputs\" : { \n"
       "               \"click\" : { \n"
-      "                \"output\" : \"/actions/firefox/in/RHand_grip_pressed\" "
-      "\n"
+      "                \"output\" : \"/actions/firefox/in/RHand_grip_pressed\" \n"
       "              }, \n"
       "               \"touch\" : { \n"
-      "                 \"output\" : "
-      "\"/actions/firefox/in/RHand_grip_touched\" \n"
+      "                 \"output\" : \"/actions/firefox/in/RHand_grip_touched\" \n"
       "              } \n"
       "           }, \n"
       "				      \"mode\" : \"button\", \n"
-      "				      \"path\" : "
-      "\"/user/hand/right/input/grip\" \n"
+      "				      \"path\" : \"/user/hand/right/input/grip\" \n"
       "           }, \n"
       "           {\n"
       "             \"inputs\" : { \n"
       "               \"position\" : { \n"
-      "                   \"output\" : "
-      "\"/actions/firefox/in/LHand_trackpad_analog\" \n"
+      "                   \"output\" : \"/actions/firefox/in/LHand_trackpad_analog\" \n"
       "               }, \n"
       "               \"click\" : { \n"
-      "                   \"output\" : "
-      "\"/actions/firefox/in/LHand_trackpad_pressed\" \n"
+      "                   \"output\" : \"/actions/firefox/in/LHand_trackpad_pressed\" \n"
       "               }, \n"
       "               \"touch\" : { \n"
-      "                   \"output\" : "
-      "\"/actions/firefox/in/LHand_trackpad_touched\" \n"
+      "                   \"output\" : \"/actions/firefox/in/LHand_trackpad_touched\" \n"
       "               } \n"
       "             }, \n"
       "             \"mode\" : \"trackpad\", \n"
@@ -365,16 +341,13 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
       "           {\n"
       "             \"inputs\" : { \n"
       "               \"position\" : { \n"
-      "                   \"output\" : "
-      "\"/actions/firefox/in/RHand_trackpad_analog\" \n"
+      "                   \"output\" : \"/actions/firefox/in/RHand_trackpad_analog\" \n"
       "               }, \n"
       "               \"click\" : { \n"
-      "                   \"output\" : "
-      "\"/actions/firefox/in/RHand_trackpad_pressed\" \n"
+      "                   \"output\" : \"/actions/firefox/in/RHand_trackpad_pressed\" \n"
       "               }, \n"
       "               \"touch\" : { \n"
-      "                   \"output\" : "
-      "\"/actions/firefox/in/RHand_trackpad_touched\" \n"
+      "                   \"output\" : \"/actions/firefox/in/RHand_trackpad_touched\" \n"
       "               } \n"
       "             }, \n"
       "             \"mode\" : \"trackpad\", \n"
@@ -385,12 +358,154 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
       "  }\n"
       "}";
 
-    std::ofstream bindingfile(bindingFileName);
-    // nsCString bindingResult(NS_ConvertUTF16toUTF8(bindingData.get()));
-    if (bindingfile.is_open()) {
-      //  bindingfile << bindingResult.get();
-      bindingfile << vive_controller;
-      bindingfile.close();
+    std::ofstream viveBindingFile(viveBindingFileName);
+    if (viveBindingFile.is_open()) {
+      viveBindingFile << vive_controller;
+      viveBindingFile.close();
+    }
+
+    // Create and open a temp file
+    std::string knucklesBindingFileName = std::tmpnam(nullptr);
+
+    // TODO: Write it to profile folder.
+
+    // In order to be more readable when editing this config file, we choose
+    // don't use JSONWriter.
+    const char* knuckles_controller =
+      " \n"
+      "{\n"
+      "  \"controller_type\" : \"knuckles\", \n"
+      "  \"description\" : \"Bindings for Firefox OpenVR for the Knuckles controller\", \n"
+      "  \"name\" : \"Firefox bindings for Knuckles Controller\", \n"
+      "  \"bindings\" : { \n"
+      "     \"/actions/firefox\" : { \n"
+      "         \"poses\" : [        \n"
+      "           {                \n"
+      "             \"output\" : \"/actions/firefox/in/LHand_pose\", \n"
+      "              \"path\" : \"/user/hand/left/pose/raw\"     \n"
+      "            },\n"
+      "            {                                             \n"
+      "              \"output\" : \"/actions/firefox/in/RHand_pose\", \n"
+      "              \"path\" : \"/user/hand/right/pose/raw\"    \n"
+      "            }\n"
+      "         ],\n"
+      "         \"haptics\" : [ \n"
+      "            {\n"
+      "              \"output\" : \"/actions/firefox/out/LHand_haptic\",  \n"
+      "              \"path\" : \"/user/hand/left/output/haptic\"     \n"
+      "            },\n"
+      "            { \n"
+      "              \"output\" : \"/actions/firefox/out/RHand_haptic\", \n"
+      "              \"path\" : \"/user/hand/right/output/haptic\"    \n"
+      "            }\n"
+      "		  ],\n"
+      "       \"sources\" : [ \n"
+      "           {\n"
+      "             \"inputs\" : { \n"
+      "                 \"click\" : { \n"
+      "                    \"output\" : \"/actions/firefox/in/LHand_menu_pressed\"  \n"
+      "                   }, \n"
+      "                 \"touch\" : { \n"
+      "                    \"output\" : \"/actions/firefox/in/LHand_menu_touched\"  \n"
+      "                   } \n"
+      "              },\n"
+      "             \"mode\" : \"button\", \n"
+      "             \"path\" : \"/user/hand/left/input/application_menu\" \n"
+      "           }, \n"
+      "           {\n"
+      "             \"inputs\" : { \n"
+      "                 \"click\" : { \n"
+      "                    \"output\" : \"/actions/firefox/in/RHand_menu_pressed\"  \n"
+      "                   }, \n"
+      "                 \"touch\" : { \n"
+      "                    \"output\" : \"/actions/firefox/in/RHand_menu_touched\"  \n"
+      "                   } \n"
+      "              },\n"
+      "             \"mode\" : \"button\", \n"
+      "             \"path\" : \"/user/hand/right/input/application_menu\" \n"
+      "           }, \n"
+      "           {\n"
+      "             \"inputs\" : { \n"
+      "                 \"pull\" : { \n"
+      "                    \"output\" : \"/actions/firefox/in/LHand_trigger_value\"  \n"
+      "                   } \n"
+      "              },\n"
+      "             \"mode\" : \"trigger\", \n"
+      "             \"path\" : \"/user/hand/left/input/trigger\" \n"
+      "           }, \n"
+      "           {\n"
+      "             \"inputs\" : { \n"
+      "                 \"pull\" : { \n"
+      "                    \"output\" : \"/actions/firefox/in/RHand_trigger_value\"  \n"
+      "                   } \n"
+      "              },\n"
+      "             \"mode\" : \"trigger\", \n"
+      "             \"path\" : \"/user/hand/right/input/trigger\" \n"
+      "           }, \n"
+      "           {\n"
+      "             \"inputs\" : { \n"
+      "               \"click\" : { \n"
+      "                \"output\" : \"/actions/firefox/in/LHand_grip_pressed\" \n"
+      "              }, \n"
+      "               \"touch\" : { \n"
+      "                 \"output\" : "
+      "                  \"/actions/firefox/in/LHand_grip_touched\" \n"
+      "              } \n"
+      "             }, \n"
+      "				      \"mode\" : \"button\", \n"
+      "				      \"path\" : \"/user/hand/left/input/grip\" \n"
+      "           }, \n"
+      "           {\n"
+      "             \"inputs\" : { \n"
+      "               \"click\" : { \n"
+      "                \"output\" : \"/actions/firefox/in/RHand_grip_pressed\" \n"
+      "              }, \n"
+      "               \"touch\" : { \n"
+      "                 \"output\" : \"/actions/firefox/in/RHand_grip_touched\" \n"
+      "              } \n"
+      "           }, \n"
+      "				      \"mode\" : \"button\", \n"
+      "				      \"path\" : \"/user/hand/right/input/grip\" \n"
+      "           }, \n"
+      "           {\n"
+      "             \"inputs\" : { \n"
+      "               \"position\" : { \n"
+      "                   \"output\" : \"/actions/firefox/in/LHand_trackpad_analog\" \n"
+      "               }, \n"
+      "               \"click\" : { \n"
+      "                   \"output\" : \"/actions/firefox/in/LHand_trackpad_pressed\" \n"
+      "               }, \n"
+      "               \"touch\" : { \n"
+      "                   \"output\" : \"/actions/firefox/in/LHand_trackpad_touched\" \n"
+      "               } \n"
+      "             }, \n"
+      "             \"mode\" : \"trackpad\", \n"
+      "             \"path\" : \"/user/hand/left/input/trackpad\" \n"
+      "           },\n"
+      "           {\n"
+      "             \"inputs\" : { \n"
+      "               \"position\" : { \n"
+      "                   \"output\" : \"/actions/firefox/in/RHand_trackpad_analog\" \n"
+      "               }, \n"
+      "               \"click\" : { \n"
+      "                   \"output\" : \"/actions/firefox/in/RHand_trackpad_pressed\" \n"
+      "               }, \n"
+      "               \"touch\" : { \n"
+      "                   \"output\" : \"/actions/firefox/in/RHand_trackpad_touched\" \n"
+      "               } \n"
+      "             }, \n"
+      "             \"mode\" : \"trackpad\", \n"
+      "             \"path\" : \"/user/hand/right/input/trackpad\" \n"
+      "           }\n"
+      "         ]\n"
+      "     }\n"
+      "  }\n"
+      "}";
+
+    std::ofstream knucklesBindingFile(knucklesBindingFileName);
+    if (knucklesBindingFile.is_open()) {
+      knucklesBindingFile << knuckles_controller;
+      knucklesBindingFile.close();
     }
 
     std::string actionFileName = std::tmpnam(nullptr);
@@ -402,11 +517,15 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
     actionWriter.StartArrayProperty("default_bindings");
     actionWriter.StartObjectElement();
     actionWriter.StringProperty("controller_type", "vive_controller");
-    actionWriter.StringProperty("binding_url", bindingFileName.c_str());
+    actionWriter.StringProperty("binding_url", viveBindingFileName.c_str());
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("controller_type", "knuckles");
+    actionWriter.StringProperty("binding_url", knucklesBindingFileName.c_str());
     actionWriter.EndObject();
     actionWriter.EndArray(); // End "default_bindings": []
-    // "actions": [] Action paths must take the form: "/actions/<action
-    // set>/in|out/<action>"
+
+    // "actions": [] Action paths must take the form: "/actions/<action set>/in|out/<action>"
     actionWriter.StartArrayProperty("actions");
     // Left hand
     actionWriter.StartObjectElement();
@@ -532,8 +651,7 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
     // examplefileRead.close();
 
     // Setting controller actions
-    const char* path = "C:/Projects/openvr/samples/bin/hellovr_actions.json";
-    // vr::VRInput()->SetActionManifestPath(path);
+    //const char* path = "C:/Projects/openvr/samples/bin/hellovr_actions.json";
     vr::VRInput()->SetActionManifestPath(actionFileName.c_str());
 
     m_actionsetFirefox = vr::k_ulInvalidActionSetHandle;
@@ -2103,15 +2221,10 @@ OpenVRSession::UpdateHaptics()
       // commend ~ 3.9 ms. For duration time longer than 3.9 ms, we separate
       // them to a loop of 3.9 ms for make users feel that is a continuous
       // events.
-      const float microSec =
-        (duration < 0.0039f ? duration : 0.0039f) * 1000000.0f * intensity;
-      vr::VRInput()->TriggerHapticVibrationAction(
-        m_rHand[iController].m_actionHaptic,
-        0,
-        1,
-        4.0f,
-        1.0f,
-        vr::k_ulInvalidInputValueHandle);
+      // const float microSec =
+      //   (duration < 0.0039f ? duration : 0.0039f) * 1000000.0f * intensity;
+      vr::VRInput()->TriggerHapticVibrationAction(m_rHand[iController].m_actionHaptic,
+                                                  0, 1, 4.0f, 1.0f, vr::k_ulInvalidInputValueHandle);
 
       duration -= deltaTime;
       if (duration < 0.0f) {
