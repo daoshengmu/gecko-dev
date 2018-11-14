@@ -24,6 +24,14 @@ class VRThread;
 
 static const int kNumOpenVRHaptics = 1;
 
+enum OpenVRHand : int8_t {
+  Left = 0,
+  Right = 1,
+  Total = 2,
+
+  None = -1
+};
+
 class OpenVRSession : public VRSession
 {
 public:
@@ -55,7 +63,8 @@ private:
   ::vr::IVRSystem* mVRSystem = nullptr;
   ::vr::IVRChaperone* mVRChaperone = nullptr;
   ::vr::IVRCompositor* mVRCompositor = nullptr;
-  ::vr::TrackedDeviceIndex_t mControllerDeviceIndex[kVRControllerMaxCount];
+  ::vr::TrackedDeviceIndex_t mControllerDeviceIndexObsolete[kVRControllerMaxCount];
+  OpenVRHand mControllerDeviceIndex123[kVRControllerMaxCount];
   float mHapticPulseRemaining[kVRControllerMaxCount][kNumOpenVRHaptics];
   float mHapticPulseIntensity[kVRControllerMaxCount][kNumOpenVRHaptics];
   bool mIsWindowsMR;
@@ -66,6 +75,7 @@ private:
   void UpdateEyeParameters(mozilla::gfx::VRSystemState& aState);
   void UpdateHeadsetPose(mozilla::gfx::VRSystemState& aState);
   void EnumerateControllers(VRSystemState& aState);
+  void EnumerateControllersObsolete(VRSystemState& aState);
   void UpdateControllerPoses(VRSystemState& aState);
   void UpdateControllerPosesObsolete(VRSystemState& aState);
   void UpdateControllerButtons(VRSystemState& aState);
