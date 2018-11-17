@@ -20,6 +20,10 @@
 
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
+#include "binding/OpenVRKnucklesBinding.h"
+#include "binding/OpenVRViveBinding.h"
+#include "binding/OpenVRWMRBinding.h"
+
 #include "VRThread.h"
 
 #if !defined(M_PI)
@@ -65,6 +69,30 @@ GetControllerHandFromControllerRole(::vr::ETrackedControllerRole aRole)
   }
 
   return hand;
+}
+
+dom::GamepadHand
+GetControllerHandFromControllerRole(OpenVRHand aRole)
+{
+	dom::GamepadHand hand;
+
+	switch (aRole) {
+	case OpenVRHand::None:
+		hand = dom::GamepadHand::_empty;
+		break;
+	case OpenVRHand::Left:
+		hand = dom::GamepadHand::Left;
+		break;
+	case OpenVRHand::Right:
+		hand = dom::GamepadHand::Right;
+		break;
+	default:
+		hand = dom::GamepadHand::_empty;
+		MOZ_ASSERT(false);
+		break;
+	}
+
+	return hand;
 }
 
 void
@@ -133,7 +161,7 @@ struct ControllerInfo_t
   vr::VRInputValueHandle_t m_source = vr::k_ulInvalidInputValueHandle;
   vr::VRActionHandle_t m_actionPose = vr::k_ulInvalidActionHandle;
   vr::VRActionHandle_t m_actionHaptic = vr::k_ulInvalidActionHandle;
-  vr::VRActionHandle_t m_actionSkeletal = vr::k_ulInvalidActionHandle;
+
   vr::VRActionHandle_t m_actionTrackpad_Analog = vr::k_ulInvalidActionHandle;
   vr::VRActionHandle_t m_actionTrackpad_Pressed = vr::k_ulInvalidActionHandle;
   vr::VRActionHandle_t m_actionTrackpad_Touched = vr::k_ulInvalidActionHandle;
@@ -146,10 +174,24 @@ struct ControllerInfo_t
   vr::VRActionHandle_t m_actionMenu_Pressed = vr::k_ulInvalidActionHandle;
   vr::VRActionHandle_t m_actionMenu_Touched = vr::k_ulInvalidActionHandle;
 
-  // gfx::Matrix4x4 m_rmat4Pose;
-  //  CGLRenderModel *m_pRenderModel = nullptr;
-  // std::string m_sRenderModelName;
-  // bool m_bShowController;
+  vr::VRActionHandle_t m_actionSystem_Pressed = vr::k_ulInvalidActionHandle;
+  vr::VRActionHandle_t m_actionSystem_Touched = vr::k_ulInvalidActionHandle;
+
+  // --- Knuckles
+  vr::VRActionHandle_t m_actionA_Pressed = vr::k_ulInvalidActionHandle;
+  vr::VRActionHandle_t m_actionA_Touched = vr::k_ulInvalidActionHandle;
+
+  vr::VRActionHandle_t m_actionB_Pressed = vr::k_ulInvalidActionHandle;
+  vr::VRActionHandle_t m_actionB_Touched = vr::k_ulInvalidActionHandle;
+
+  vr::VRActionHandle_t m_actionThumbstick_Analog = vr::k_ulInvalidActionHandle;
+  vr::VRActionHandle_t m_actionThumbstick_Pressed = vr::k_ulInvalidActionHandle;
+  vr::VRActionHandle_t m_actionThumbstick_Touched = vr::k_ulInvalidActionHandle;
+
+  vr::VRActionHandle_t m_actionFingerIndex_Value = vr::k_ulInvalidActionHandle;
+  vr::VRActionHandle_t m_actionFingerMiddle_Value = vr::k_ulInvalidActionHandle;
+  vr::VRActionHandle_t m_actionFingerRing_Value = vr::k_ulInvalidActionHandle;
+  vr::VRActionHandle_t m_actionFingerPinky_Value = vr::k_ulInvalidActionHandle;
 };
 
 ControllerInfo_t m_rHand[OpenVRHand::Total];
@@ -215,294 +257,35 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
   }
 
   if (gfxPrefs::VROpenVRActionInputEnabled()) {
+
     // Create and open a temp file
     std::string viveBindingFileName = std::tmpnam(nullptr);
-
+    OpenVRViveBinding viveBinding;
     // TODO: Write it to profile folder.
-
-    // In order to be more readable when editing this config file, we choose
-    // don't use JSONWriter.
-    const char* vive_controller =
-      " \n"
-      "{\n"
-      "  \"version\" : \"0.1\", \n"
-      "  \"controller_type\" : \"vive_controller\", \n"
-      "  \"description\" : \"Bindings for Firefox OpenVR for the Vive controller\", \n"
-      "  \"name\" : \"Firefox bindings for Vive Controller\", \n"
-      "  \"bindings\" : { \n"
-      "     \"/actions/firefox\" : { \n"
-      "         \"poses\" : [        \n"
-      "           {                \n"
-      "             \"output\" : \"/actions/firefox/in/LHand_pose\", \n"
-      "              \"path\" : \"/user/hand/left/pose/raw\"     \n"
-      "            },\n"
-      "            {                                             \n"
-      "              \"output\" : \"/actions/firefox/in/RHand_pose\", \n"
-      "              \"path\" : \"/user/hand/right/pose/raw\"    \n"
-      "            }\n"
-      "         ],\n"
-      "         \"haptics\" : [ \n"
-      "            {\n"
-      "              \"output\" : \"/actions/firefox/out/LHand_haptic\",  \n"
-      "              \"path\" : \"/user/hand/left/output/haptic\"     \n"
-      "            },\n"
-      "            { \n"
-      "              \"output\" : \"/actions/firefox/out/RHand_haptic\", \n"
-      "              \"path\" : \"/user/hand/right/output/haptic\"    \n"
-      "            }\n"
-      "		  ],\n"
-      "       \"sources\" : [ \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "                 \"click\" : { \n"
-      "                    \"output\" : \"/actions/firefox/in/LHand_menu_pressed\"  \n"
-      "                   }, \n"
-      "                 \"touch\" : { \n"
-      "                    \"output\" : \"/actions/firefox/in/LHand_menu_touched\"  \n"
-      "                   } \n"
-      "              },\n"
-      "             \"mode\" : \"button\", \n"
-      "             \"path\" : \"/user/hand/left/input/application_menu\" \n"
-      "           }, \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "                 \"click\" : { \n"
-      "                    \"output\" : \"/actions/firefox/in/RHand_menu_pressed\"  \n"
-      "                   }, \n"
-      "                 \"touch\" : { \n"
-      "                    \"output\" : \"/actions/firefox/in/RHand_menu_touched\"  \n"
-      "                   } \n"
-      "              },\n"
-      "             \"mode\" : \"button\", \n"
-      "             \"path\" : \"/user/hand/right/input/application_menu\" \n"
-      "           }, \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "                 \"pull\" : { \n"
-      "                    \"output\" : \"/actions/firefox/in/LHand_trigger_value\"  \n"
-      "                   } \n"
-      "              },\n"
-      "             \"mode\" : \"trigger\", \n"
-      "             \"path\" : \"/user/hand/left/input/trigger\" \n"
-      "           }, \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "                 \"pull\" : { \n"
-      "                    \"output\" : \"/actions/firefox/in/RHand_trigger_value\"  \n"
-      "                   } \n"
-      "              },\n"
-      "             \"mode\" : \"trigger\", \n"
-      "             \"path\" : \"/user/hand/right/input/trigger\" \n"
-      "           }, \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "               \"click\" : { \n"
-      "                \"output\" : \"/actions/firefox/in/LHand_grip_pressed\" \n"
-      "              }, \n"
-      "               \"touch\" : { \n"
-      "                 \"output\" : "
-      "                  \"/actions/firefox/in/LHand_grip_touched\" \n"
-      "              } \n"
-      "             }, \n"
-      "				      \"mode\" : \"button\", \n"
-      "				      \"path\" : \"/user/hand/left/input/grip\" \n"
-      "           }, \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "               \"click\" : { \n"
-      "                \"output\" : \"/actions/firefox/in/RHand_grip_pressed\" \n"
-      "              }, \n"
-      "               \"touch\" : { \n"
-      "                 \"output\" : \"/actions/firefox/in/RHand_grip_touched\" \n"
-      "              } \n"
-      "           }, \n"
-      "				      \"mode\" : \"button\", \n"
-      "				      \"path\" : \"/user/hand/right/input/grip\" \n"
-      "           }, \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "               \"position\" : { \n"
-      "                   \"output\" : \"/actions/firefox/in/LHand_trackpad_analog\" \n"
-      "               }, \n"
-      "               \"click\" : { \n"
-      "                   \"output\" : \"/actions/firefox/in/LHand_trackpad_pressed\" \n"
-      "               }, \n"
-      "               \"touch\" : { \n"
-      "                   \"output\" : \"/actions/firefox/in/LHand_trackpad_touched\" \n"
-      "               } \n"
-      "             }, \n"
-      "             \"mode\" : \"trackpad\", \n"
-      "             \"path\" : \"/user/hand/left/input/trackpad\" \n"
-      "           },\n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "               \"position\" : { \n"
-      "                   \"output\" : \"/actions/firefox/in/RHand_trackpad_analog\" \n"
-      "               }, \n"
-      "               \"click\" : { \n"
-      "                   \"output\" : \"/actions/firefox/in/RHand_trackpad_pressed\" \n"
-      "               }, \n"
-      "               \"touch\" : { \n"
-      "                   \"output\" : \"/actions/firefox/in/RHand_trackpad_touched\" \n"
-      "               } \n"
-      "             }, \n"
-      "             \"mode\" : \"trackpad\", \n"
-      "             \"path\" : \"/user/hand/right/input/trackpad\" \n"
-      "           }\n"
-      "         ]\n"
-      "     }\n"
-      "  }\n"
-      "}";
-
     std::ofstream viveBindingFile(viveBindingFileName);
     if (viveBindingFile.is_open()) {
-      viveBindingFile << vive_controller;
+      viveBindingFile << viveBinding.binding;
       viveBindingFile.close();
     }
 
     // Create and open a temp file
     std::string knucklesBindingFileName = std::tmpnam(nullptr);
-
-    // TODO: Write it to profile folder.
-
-    // In order to be more readable when editing this config file, we choose
-    // don't use JSONWriter.
-    const char* knuckles_controller =
-      " \n"
-      "{\n"
-      "  \"version\" : \"0.1\", \n"
-      "  \"controller_type\" : \"knuckles\", \n"
-      "  \"description\" : \"Bindings for Firefox OpenVR for the Knuckles controller\", \n"
-      "  \"name\" : \"Firefox bindings for Knuckles Controller\", \n"
-      "  \"bindings\" : { \n"
-      "     \"/actions/firefox\" : { \n"
-      "         \"poses\" : [        \n"
-      "           {                \n"
-      "             \"output\" : \"/actions/firefox/in/LHand_pose\", \n"
-      "              \"path\" : \"/user/hand/left/pose/raw\"     \n"
-      "            },\n"
-      "            {                                             \n"
-      "              \"output\" : \"/actions/firefox/in/RHand_pose\", \n"
-      "              \"path\" : \"/user/hand/right/pose/raw\"    \n"
-      "            }\n"
-      "         ],\n"
-      "         \"haptics\" : [ \n"
-      "            {\n"
-      "              \"output\" : \"/actions/firefox/out/LHand_haptic\",  \n"
-      "              \"path\" : \"/user/hand/left/output/haptic\"     \n"
-      "            },\n"
-      "            { \n"
-      "              \"output\" : \"/actions/firefox/out/RHand_haptic\", \n"
-      "              \"path\" : \"/user/hand/right/output/haptic\"    \n"
-      "            }\n"
-      "		  ],\n"
-      "       \"sources\" : [ \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "                 \"click\" : { \n"
-      "                    \"output\" : \"/actions/firefox/in/LHand_menu_pressed\"  \n"
-      "                   }, \n"
-      "                 \"touch\" : { \n"
-      "                    \"output\" : \"/actions/firefox/in/LHand_menu_touched\"  \n"
-      "                   } \n"
-      "              },\n"
-      "             \"mode\" : \"button\", \n"
-      "             \"path\" : \"/user/hand/left/input/application_menu\" \n"
-      "           }, \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "                 \"click\" : { \n"
-      "                    \"output\" : \"/actions/firefox/in/RHand_menu_pressed\"  \n"
-      "                   }, \n"
-      "                 \"touch\" : { \n"
-      "                    \"output\" : \"/actions/firefox/in/RHand_menu_touched\"  \n"
-      "                   } \n"
-      "              },\n"
-      "             \"mode\" : \"button\", \n"
-      "             \"path\" : \"/user/hand/right/input/application_menu\" \n"
-      "           }, \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "                 \"pull\" : { \n"
-      "                    \"output\" : \"/actions/firefox/in/LHand_trigger_value\"  \n"
-      "                   } \n"
-      "              },\n"
-      "             \"mode\" : \"trigger\", \n"
-      "             \"path\" : \"/user/hand/left/input/trigger\" \n"
-      "           }, \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "                 \"pull\" : { \n"
-      "                    \"output\" : \"/actions/firefox/in/RHand_trigger_value\"  \n"
-      "                   } \n"
-      "              },\n"
-      "             \"mode\" : \"trigger\", \n"
-      "             \"path\" : \"/user/hand/right/input/trigger\" \n"
-      "           }, \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "               \"click\" : { \n"
-      "                \"output\" : \"/actions/firefox/in/LHand_grip_pressed\" \n"
-      "              }, \n"
-      "               \"touch\" : { \n"
-      "                 \"output\" : "
-      "                  \"/actions/firefox/in/LHand_grip_touched\" \n"
-      "              } \n"
-      "             }, \n"
-      "				      \"mode\" : \"button\", \n"
-      "				      \"path\" : \"/user/hand/left/input/grip\" \n"
-      "           }, \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "               \"click\" : { \n"
-      "                \"output\" : \"/actions/firefox/in/RHand_grip_pressed\" \n"
-      "              }, \n"
-      "               \"touch\" : { \n"
-      "                 \"output\" : \"/actions/firefox/in/RHand_grip_touched\" \n"
-      "              } \n"
-      "           }, \n"
-      "				      \"mode\" : \"button\", \n"
-      "				      \"path\" : \"/user/hand/right/input/grip\" \n"
-      "           }, \n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "               \"position\" : { \n"
-      "                   \"output\" : \"/actions/firefox/in/LHand_trackpad_analog\" \n"
-      "               }, \n"
-      "               \"click\" : { \n"
-      "                   \"output\" : \"/actions/firefox/in/LHand_trackpad_pressed\" \n"
-      "               }, \n"
-      "               \"touch\" : { \n"
-      "                   \"output\" : \"/actions/firefox/in/LHand_trackpad_touched\" \n"
-      "               } \n"
-      "             }, \n"
-      "             \"mode\" : \"trackpad\", \n"
-      "             \"path\" : \"/user/hand/left/input/trackpad\" \n"
-      "           },\n"
-      "           {\n"
-      "             \"inputs\" : { \n"
-      "               \"position\" : { \n"
-      "                   \"output\" : \"/actions/firefox/in/RHand_trackpad_analog\" \n"
-      "               }, \n"
-      "               \"click\" : { \n"
-      "                   \"output\" : \"/actions/firefox/in/RHand_trackpad_pressed\" \n"
-      "               }, \n"
-      "               \"touch\" : { \n"
-      "                   \"output\" : \"/actions/firefox/in/RHand_trackpad_touched\" \n"
-      "               } \n"
-      "             }, \n"
-      "             \"mode\" : \"trackpad\", \n"
-      "             \"path\" : \"/user/hand/right/input/trackpad\" \n"
-      "           }\n"
-      "         ]\n"
-      "     }\n"
-      "  }\n"
-      "}";
+    OpenVRKnucklesBinding knucklesBinding;
 
     std::ofstream knucklesBindingFile(knucklesBindingFileName);
     if (knucklesBindingFile.is_open()) {
-      knucklesBindingFile << knuckles_controller;
+      knucklesBindingFile << knucklesBinding.binding;
       knucklesBindingFile.close();
+    }
+
+    // Create and open a temp file
+    std::string WMRBindingFileName = std::tmpnam(nullptr);
+    OpenVRWMRBinding WMRBinding;
+
+    std::ofstream WMRBindingFile(WMRBindingFileName);
+    if (WMRBindingFile.is_open()) {
+      WMRBindingFile << WMRBinding.binding;
+      WMRBindingFile.close();
     }
 
     std::string actionFileName = std::tmpnam(nullptr);
@@ -520,6 +303,10 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
     actionWriter.StartObjectElement();
     actionWriter.StringProperty("controller_type", "knuckles");
     actionWriter.StringProperty("binding_url", knucklesBindingFileName.c_str());
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("controller_type", "holographic_controller");
+    actionWriter.StringProperty("binding_url", WMRBindingFileName.c_str());
     actionWriter.EndObject();
     actionWriter.EndArray(); // End "default_bindings": []
 
@@ -569,6 +356,71 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
     actionWriter.StringProperty("name",
                                 "/actions/firefox/in/LHand_menu_touched");
     actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/LHand_system_pressed");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/LHand_system_touched");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/LHand_A_pressed");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/LHand_A_touched");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/LHand_B_pressed");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/LHand_B_touched");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+	  actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/LHand_thumbstick_pressed");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/LHand_thumbstick_touched");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/LHand_thumbstick_analog");
+    actionWriter.StringProperty("type", "vector2");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/LHand_finger_index_value");
+    actionWriter.StringProperty("type", "vector1");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/LHand_finger_middle_value");
+    actionWriter.StringProperty("type", "vector1");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/LHand_finger_ring_value");
+    actionWriter.StringProperty("type", "vector1");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/LHand_finger_pinky_value");
+    actionWriter.StringProperty("type", "vector1");
     actionWriter.EndObject();
     actionWriter.StartObjectElement();
     actionWriter.StringProperty("name", "/actions/firefox/out/LHand_haptic");
@@ -621,6 +473,71 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
     actionWriter.StringProperty("type", "boolean");
     actionWriter.EndObject();
     actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/RHand_system_pressed");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/RHand_system_touched");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/RHand_A_pressed");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/RHand_A_touched");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/RHand_B_pressed");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/RHand_B_touched");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+  	actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/RHand_thumbstick_pressed");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/RHand_thumbstick_touched");
+    actionWriter.StringProperty("type", "boolean");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/RHand_thumbstick_analog");
+    actionWriter.StringProperty("type", "vector2");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/RHand_finger_index_value");
+    actionWriter.StringProperty("type", "vector1");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/RHand_finger_middle_value");
+    actionWriter.StringProperty("type", "vector1");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/RHand_finger_ring_value");
+    actionWriter.StringProperty("type", "vector1");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("name",
+                                "/actions/firefox/in/RHand_finger_pinky_value");
+    actionWriter.StringProperty("type", "vector1");
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
     actionWriter.StringProperty("name", "/actions/firefox/out/RHand_haptic");
     actionWriter.StringProperty("type", "vibration");
     actionWriter.EndObject();
@@ -651,55 +568,6 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
     // Setting controller actions
     //const char* path = "C:/Projects/openvr/samples/bin/hellovr_actions.json";
     vr::VRInput()->SetActionManifestPath(actionFileName.c_str());
-
-    // m_actionsetFirefox = vr::k_ulInvalidActionSetHandle;
-    // vr::VRInput()->GetActionSetHandle("/actions/firefox", &m_actionsetFirefox);
-    // vr::VRInput()->GetInputSourceHandle("/user/hand/left",
-    //                                     &m_rHand[Left].m_source);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_pose",
-    //                                &m_rHand[Left].m_actionPose);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/out/LHand_haptic",
-    //                                &m_rHand[Left].m_actionHaptic);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_trackpad_analog",
-    //                                &m_rHand[Left].m_actionTrackpad_Analog);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_trackpad_pressed",
-    //                                &m_rHand[Left].m_actionTrackpad_Pressed);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_trackpad_touched",
-    //                                &m_rHand[Left].m_actionTrackpad_Touched);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_trigger_value",
-    //                                &m_rHand[Left].m_actionTrigger_Value);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_grip_pressed",
-    //                                &m_rHand[Left].m_actionGrip_Pressed);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_grip_touched",
-    //                                &m_rHand[Left].m_actionGrip_Touched);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_menu_pressed",
-    //                                &m_rHand[Left].m_actionMenu_Pressed);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_menu_touched",
-    //                                &m_rHand[Left].m_actionMenu_Touched);
-
-    // vr::VRInput()->GetInputSourceHandle("/user/hand/right",
-    //                                     &m_rHand[Right].m_source);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_pose",
-    //                                &m_rHand[Right].m_actionPose);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/out/RHand_haptic",
-    //                                &m_rHand[Right].m_actionHaptic);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_trackpad_analog",
-    //                                &m_rHand[Right].m_actionTrackpad_Analog);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_trackpad_pressed",
-    //                                &m_rHand[Right].m_actionTrackpad_Pressed);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_trackpad_touched",
-    //                                &m_rHand[Right].m_actionTrackpad_Touched);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_trigger_value",
-    //                                &m_rHand[Right].m_actionTrigger_Value);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_grip_pressed",
-    //                                &m_rHand[Right].m_actionGrip_Pressed);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_grip_touched",
-    //                                &m_rHand[Right].m_actionGrip_Touched);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_menu_pressed",
-    //                                &m_rHand[Right].m_actionMenu_Pressed);
-    // vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_menu_touched",
-    //                                &m_rHand[Right].m_actionMenu_Touched);
-
     // char buf[256];
     //// Write someting to the action file
     //// Creating a temporary file in memory for the action file.
@@ -961,9 +829,8 @@ OpenVRSession::EnumerateControllers(VRSystemState& aState)
 
   MutexAutoLock lock(mControllerHapticStateMutex);
 
-  bool controllerPresent[kVRControllerMaxCount] = { false };
+  bool controllerPresent[kVRControllerMaxCount] = {false};
   uint32_t stateIndex = 0;
-  uint32_t firstEmptyIndex = kVRControllerMaxCount;
   m_actionsetFirefox = vr::k_ulInvalidActionSetHandle;
 
   if (vr::VRInput()->GetActionSetHandle("/actions/firefox", &m_actionsetFirefox)
@@ -978,48 +845,56 @@ OpenVRSession::EnumerateControllers(VRSystemState& aState)
 	  mVRSystem->IsTrackedDeviceConnected(originInfo.trackedDeviceIndex)) {
   
     if (mControllerDeviceIndex123[stateIndex] != OpenVRHand::Left) {
-      uint32_t numButtons = 0;
-      uint32_t numAxes = 0;
       VRControllerState& controllerState = aState.controllerState[stateIndex];
 
       vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_pose",
-                                    &m_rHand[OpenVRHand::Left].m_actionPose);
+                                     &m_rHand[OpenVRHand::Left].m_actionPose);
       vr::VRInput()->GetActionHandle("/actions/firefox/out/LHand_haptic",
-                                    &m_rHand[OpenVRHand::Left].m_actionHaptic);
+                                     &m_rHand[OpenVRHand::Left].m_actionHaptic);
                                     
-      if (vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_trackpad_analog",
-                                        &m_rHand[OpenVRHand::Left].m_actionTrackpad_Analog)
-                                        == vr::VRInputError_None) {
-        numAxes +=2;
-      }
-      if (vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_trackpad_pressed",
-                                        &m_rHand[OpenVRHand::Left].m_actionTrackpad_Pressed)
-                                        == vr::VRInputError_None) {
-        ++numButtons;
-      }
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_trackpad_analog",
+                                     &m_rHand[OpenVRHand::Left].m_actionTrackpad_Analog);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_trackpad_pressed",
+                                     &m_rHand[OpenVRHand::Left].m_actionTrackpad_Pressed);
       vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_trackpad_touched",
-                                    &m_rHand[OpenVRHand::Left].m_actionTrackpad_Touched);
-
-      if (vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_trigger_value",
-                                        &m_rHand[OpenVRHand::Left].m_actionTrigger_Value)
-                                        == vr::VRInputError_None) {
-        ++numButtons;
-      }
-      if (vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_grip_pressed",
-                                        &m_rHand[OpenVRHand::Left].m_actionGrip_Pressed)
-                                        == vr::VRInputError_None) {
-        ++numButtons;
-      }
+                                     &m_rHand[OpenVRHand::Left].m_actionTrackpad_Touched);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_trigger_value",
+                                     &m_rHand[OpenVRHand::Left].m_actionTrigger_Value);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_grip_pressed",
+                                     &m_rHand[OpenVRHand::Left].m_actionGrip_Pressed);
       vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_grip_touched",
                                     &m_rHand[OpenVRHand::Left].m_actionGrip_Touched);
-      
-      if (vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_menu_pressed",
-                                        &m_rHand[OpenVRHand::Left].m_actionMenu_Pressed)
-                                        == vr::VRInputError_None) {
-        ++numButtons;
-      }
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_menu_pressed",
+                                     &m_rHand[OpenVRHand::Left].m_actionMenu_Pressed);
       vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_menu_touched",
-                                    &m_rHand[OpenVRHand::Left].m_actionMenu_Touched);
+                                     &m_rHand[OpenVRHand::Left].m_actionMenu_Touched);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_system_pressed",
+                                     &m_rHand[OpenVRHand::Left].m_actionSystem_Pressed);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_system_touched",
+                                     &m_rHand[OpenVRHand::Left].m_actionSystem_Touched);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_a_pressed",
+                                     &m_rHand[OpenVRHand::Left].m_actionA_Pressed);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_a_touched",
+                                     &m_rHand[OpenVRHand::Left].m_actionA_Touched);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_b_pressed",
+                                     &m_rHand[OpenVRHand::Left].m_actionB_Pressed);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_b_touched",
+                                     &m_rHand[OpenVRHand::Left].m_actionB_Touched);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_thumbstick_analog",
+                                     &m_rHand[OpenVRHand::Left].m_actionThumbstick_Analog);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_thumbstick_pressed",
+                                     &m_rHand[OpenVRHand::Left].m_actionThumbstick_Pressed);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_thumbstick_touched",
+                                     &m_rHand[OpenVRHand::Left].m_actionThumbstick_Touched);
+
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_finger_index_value",
+                                     &m_rHand[OpenVRHand::Left].m_actionFingerIndex_Value);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_finger_middle_value",
+                                     &m_rHand[OpenVRHand::Left].m_actionFingerMiddle_Value);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_finger_ring_value",
+                                     &m_rHand[OpenVRHand::Left].m_actionFingerRing_Value);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/LHand_finger_pinky_value",
+                                     &m_rHand[OpenVRHand::Left].m_actionFingerPinky_Value);
 
       vr::InputOriginInfo_t originInfo;
       if ( vr::VRInput()->GetOriginTrackedDeviceInfo(m_rHand[OpenVRHand::Left].m_source, &originInfo, sizeof(originInfo))
@@ -1032,8 +907,6 @@ OpenVRSession::EnumerateControllers(VRSystemState& aState)
             strncpy(controllerState.controllerName, deviceId.BeginReading(), kVRControllerNameMaxLen);
         }
       }
-      controllerState.numButtons = numButtons;
-      controllerState.numAxes = numAxes;
       controllerState.numHaptics = kNumOpenVRHaptics;
     }
     controllerPresent[stateIndex] = true;
@@ -1042,13 +915,11 @@ OpenVRSession::EnumerateControllers(VRSystemState& aState)
   }
 
   if (vr::VRInput()->GetInputSourceHandle("/user/hand/right", &m_rHand[Right].m_source) == vr::VRInputError_None &&
-      vr::VRInput()->GetOriginTrackedDeviceInfo(m_rHand[Right].m_source, &originInfo, sizeof(originInfo)) == vr::VRInputError_None &&
+      vr::VRInput()->GetOriginTrackedDeviceInfo(m_rHand[OpenVRHand::Right].m_source, &originInfo, sizeof(originInfo)) == vr::VRInputError_None &&
       originInfo.trackedDeviceIndex != vr::k_unTrackedDeviceIndexInvalid &&
 	  mVRSystem->IsTrackedDeviceConnected(originInfo.trackedDeviceIndex)) {
 
     if (mControllerDeviceIndex123[stateIndex] != OpenVRHand::Right) {
-      uint32_t numButtons = 0;
-      uint32_t numAxes = 0;
       VRControllerState& controllerState = aState.controllerState[stateIndex];
 
       vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_pose",
@@ -1056,41 +927,49 @@ OpenVRSession::EnumerateControllers(VRSystemState& aState)
       vr::VRInput()->GetActionHandle("/actions/firefox/out/RHand_haptic",
                                     &m_rHand[OpenVRHand::Right].m_actionHaptic);
 
-      if (vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_trackpad_analog",
-                                        &m_rHand[OpenVRHand::Right].m_actionTrackpad_Analog)
-                                        == vr::VRInputError_None) {
-        numAxes +=2;
-      }
-      if (vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_trackpad_pressed",
-                                        &m_rHand[OpenVRHand::Right].m_actionTrackpad_Pressed)
-                                        == vr::VRInputError_None) {
-        ++numButtons;
-      }
-      if (vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_trackpad_touched",
-                                        &m_rHand[OpenVRHand::Right].m_actionTrackpad_Touched)
-                                        == vr::VRInputError_None) {
-        ++numButtons;
-      }
-      if (vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_trigger_value",
-                                        &m_rHand[OpenVRHand::Right].m_actionTrigger_Value)
-                                        == vr::VRInputError_None) {
-        ++numButtons;                                   
-      }
-      if (vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_grip_pressed",
-                                        &m_rHand[OpenVRHand::Right].m_actionGrip_Pressed)
-                                        == vr::VRInputError_None) {
-        ++numButtons;                             
-      }
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_trackpad_analog",
+                                     &m_rHand[OpenVRHand::Right].m_actionTrackpad_Analog);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_trackpad_pressed",
+                                     &m_rHand[OpenVRHand::Right].m_actionTrackpad_Pressed);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_trackpad_touched",
+                                     &m_rHand[OpenVRHand::Right].m_actionTrackpad_Touched);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_trigger_value",
+                                     &m_rHand[OpenVRHand::Right].m_actionTrigger_Value);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_grip_pressed",
+                                     &m_rHand[OpenVRHand::Right].m_actionGrip_Pressed);
       vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_grip_touched",
-                                    &m_rHand[OpenVRHand::Right].m_actionGrip_Touched);
-
-      if (vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_menu_pressed",
-                                        &m_rHand[OpenVRHand::Right].m_actionMenu_Pressed)
-                                        == vr::VRInputError_None) {
-        ++numButtons;                             
-      }
+                                     &m_rHand[OpenVRHand::Right].m_actionGrip_Touched);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_menu_pressed",
+                                     &m_rHand[OpenVRHand::Right].m_actionMenu_Pressed);
       vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_menu_touched",
-                                    &m_rHand[OpenVRHand::Right].m_actionMenu_Touched);
+                                     &m_rHand[OpenVRHand::Right].m_actionMenu_Touched);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_system_pressed",
+                                     &m_rHand[OpenVRHand::Right].m_actionSystem_Pressed);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_system_touched",
+                                     &m_rHand[OpenVRHand::Right].m_actionSystem_Touched);
+
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_a_pressed",
+                                     &m_rHand[OpenVRHand::Right].m_actionA_Pressed);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_a_touched",
+                                     &m_rHand[OpenVRHand::Right].m_actionA_Touched);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_b_pressed",
+                                     &m_rHand[OpenVRHand::Right].m_actionB_Pressed);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_b_touched",
+                                     &m_rHand[OpenVRHand::Right].m_actionB_Touched);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_thumbstick_analog",
+                                     &m_rHand[OpenVRHand::Right].m_actionThumbstick_Analog);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_thumbstick_pressed",
+                                     &m_rHand[OpenVRHand::Right].m_actionThumbstick_Pressed);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_thumbstick_touched",
+                                     &m_rHand[OpenVRHand::Right].m_actionThumbstick_Touched);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_finger_index_value",
+                                     &m_rHand[OpenVRHand::Right].m_actionFingerIndex_Value);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_finger_middle_value",
+                                     &m_rHand[OpenVRHand::Right].m_actionFingerMiddle_Value);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_finger_ring_value",
+                                     &m_rHand[OpenVRHand::Right].m_actionFingerRing_Value);
+      vr::VRInput()->GetActionHandle("/actions/firefox/in/RHand_finger_pinky_value",
+                                     &m_rHand[OpenVRHand::Right].m_actionFingerPinky_Value);
 
       vr::InputOriginInfo_t originInfo;
       if ( vr::VRInput()->GetOriginTrackedDeviceInfo(m_rHand[OpenVRHand::Right].m_source, &originInfo, sizeof(originInfo))
@@ -1102,8 +981,6 @@ OpenVRSession::EnumerateControllers(VRSystemState& aState)
             strncpy(controllerState.controllerName, deviceId.BeginReading(), kVRControllerNameMaxLen);
         }
       }
-      controllerState.numButtons = numButtons;
-      controllerState.numAxes = numAxes;
       controllerState.numHaptics = kNumOpenVRHaptics;
     }
     controllerPresent[stateIndex] = true;
@@ -1273,22 +1150,17 @@ OpenVRSession::UpdateControllerButtons(VRSystemState& aState)
       continue;
     }
     VRControllerState& controllerState = aState.controllerState[stateIndex];
-    const ::vr::ETrackedControllerRole role =
-      mVRSystem->GetControllerRoleForTrackedDeviceIndex(trackedDevice);
-    dom::GamepadHand hand = GetControllerHandFromControllerRole(role);
-    controllerState.hand = hand;
+    controllerState.hand = GetControllerHandFromControllerRole(trackedDevice);
 
     uint32_t axisIdx = 0;
     uint32_t buttonIdx = 0;
     // Axis 0 1: Trackpad
     // Button 0: Trackpad
     vr::InputAnalogActionData_t analogData;
-    if (vr::VRInput()->GetAnalogActionData(
-          m_rHand[stateIndex].m_actionTrackpad_Analog,
-          &analogData,
-          sizeof(analogData),
-          vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None &&
-        analogData.bActive) {
+    if (m_rHand[stateIndex].m_actionTrackpad_Analog &&
+        vr::VRInput()->GetAnalogActionData(m_rHand[stateIndex].m_actionTrackpad_Analog,
+        &analogData, sizeof(analogData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None
+        && analogData.bActive) {
       controllerState.axisValue[axisIdx] = analogData.x;
       ++axisIdx;
       controllerState.axisValue[axisIdx] = analogData.y * yAxisInvert;
@@ -1297,236 +1169,253 @@ OpenVRSession::UpdateControllerButtons(VRSystemState& aState)
     vr::InputDigitalActionData_t actionData;
     bool bPressed = false;
     bool bTouched = false;
-    vr::VRInput()->GetDigitalActionData(
-      m_rHand[stateIndex].m_actionTrackpad_Pressed,
-      &actionData,
-      sizeof(actionData),
-      vr::k_ulInvalidInputValueHandle);
-    bPressed = actionData.bActive && actionData.bState;
-    //  UpdateButton(controllerState, vrControllerState, buttonIdx, buttonMask);
-    uint64_t mask = (1ULL << buttonIdx);
-    controllerState.triggerValue[buttonIdx] = bPressed ? 1.0 : 0.0f;
-    if (bPressed) {
-      controllerState.buttonPressed |= mask;
-    } else {
-      controllerState.buttonPressed &= ~mask;
-    }
+    uint64_t mask = 0;
+    if (m_rHand[stateIndex].m_actionTrackpad_Pressed &&
+        vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionTrackpad_Pressed,
+        &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None &&
+        actionData.bActive) {
+      bPressed = actionData.bState;
+      mask = (1ULL << buttonIdx);
+      controllerState.triggerValue[buttonIdx] = bPressed ? 1.0 : 0.0f;
+      if (bPressed) {
+        controllerState.buttonPressed |= mask;
+      } else {
+        controllerState.buttonPressed &= ~mask;
+      }
 
-    vr::VRInput()->GetDigitalActionData(
-      m_rHand[stateIndex].m_actionTrackpad_Touched,
-      &actionData,
-      sizeof(actionData),
-      vr::k_ulInvalidInputValueHandle);
-    // vr::VRInputValueHandle_t ulTouched;
-    // if (GetDigitalActionState(m_rHand[stateIndex].m_actionTrackpad_Touched,
-    // &ulTouched)) {
-    bTouched = actionData.bActive && actionData.bState;
-    mask = (1ULL << buttonIdx);
-    if (bTouched) {
-      controllerState.buttonTouched |= mask;
-    } else {
-      controllerState.buttonTouched &= ~mask;
+      if (m_rHand[stateIndex].m_actionTrackpad_Touched &&
+          vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionTrackpad_Touched,
+          &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None) {
+        bTouched = actionData.bActive && actionData.bState;
+        mask = (1ULL << buttonIdx);
+        if (bTouched) {
+          controllerState.buttonTouched |= mask;
+        } else {
+          controllerState.buttonTouched &= ~mask;
+        }
+      }
+      ++buttonIdx;    
     }
-    // }
-    ++buttonIdx;
 
     // Button 1: Trigger
-    if (vr::VRInput()->GetAnalogActionData(
-          m_rHand[stateIndex].m_actionTrigger_Value,
-          &analogData,
-          sizeof(analogData),
-          vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None &&
-        analogData.bActive) {
+    if (m_rHand[stateIndex].m_actionTrigger_Value &&
+        vr::VRInput()->GetAnalogActionData(m_rHand[stateIndex].m_actionTrigger_Value,
+        &analogData, sizeof(analogData), vr::k_ulInvalidInputValueHandle)
+        == vr::VRInputError_None && analogData.bActive) {
       UpdateTrigger(controllerState, buttonIdx, analogData.x, triggerThreshold);
+      ++buttonIdx;
     }
-    ++buttonIdx;
+    
     // Button 2: Grip
-    // vr::VRInputValueHandle_t ulPressed;
-    vr::VRInput()->GetDigitalActionData(
-      m_rHand[stateIndex].m_actionGrip_Pressed,
-      &actionData,
-      sizeof(actionData),
-      vr::k_ulInvalidInputValueHandle);
-    // if (GetDigitalActionState(m_rHand[stateIndex].m_actionGrip_Pressed,
-    // &ulPressed)) {
-    //  UpdateButton(controllerState, vrControllerState, buttonIdx, buttonMask);
-    bPressed = actionData.bActive && actionData.bState;
-    mask = (1ULL << buttonIdx);
-    controllerState.triggerValue[buttonIdx] = bPressed ? 1.0 : 0.0f;
-    if (bPressed) {
-      controllerState.buttonPressed |= mask;
-    } else {
-      controllerState.buttonPressed &= ~mask;
+    if (m_rHand[stateIndex].m_actionGrip_Pressed &&
+        vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionGrip_Pressed,
+        &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None
+        && actionData.bActive) {
+      bPressed = actionData.bState;
+      mask = (1ULL << buttonIdx);
+      controllerState.triggerValue[buttonIdx] = bPressed ? 1.0 : 0.0f;
+      if (bPressed) {
+        controllerState.buttonPressed |= mask;
+      } else {
+        controllerState.buttonPressed &= ~mask;
+      }
+      
+      if (m_rHand[stateIndex].m_actionGrip_Touched &&
+        vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionGrip_Touched,
+          &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None) {
+        bTouched = actionData.bActive && actionData.bState;
+        mask = (1ULL << buttonIdx);
+        if (bTouched) {
+          controllerState.buttonTouched |= mask;
+        } else {
+          controllerState.buttonTouched &= ~mask;
+        }
+      }
+      ++buttonIdx;
     }
-    //  }
-    vr::VRInput()->GetDigitalActionData(
-      m_rHand[stateIndex].m_actionGrip_Touched,
-      &actionData,
-      sizeof(actionData),
-      vr::k_ulInvalidInputValueHandle);
-    // vr::VRInputValueHandle_t ulTouched;
-    // if (GetDigitalActionState(m_rHand[stateIndex].m_actionGrip_Touched,
-    // &ulTouched)) {
-    bTouched = actionData.bActive && actionData.bState;
-    mask = (1ULL << buttonIdx);
-    if (bTouched) {
-      controllerState.buttonTouched |= mask;
-    } else {
-      controllerState.buttonTouched &= ~mask;
-    }
-    //}
-    ++buttonIdx;
+   
     // Button 3: Menu
-    // vr::VRInputValueHandle_t ulPressed;
-    vr::VRInput()->GetDigitalActionData(
-      m_rHand[stateIndex].m_actionMenu_Pressed,
-      &actionData,
-      sizeof(actionData),
-      vr::k_ulInvalidInputValueHandle);
-    // if (GetDigitalActionState(m_rHand[stateIndex].m_actionMenu_Pressed,
-    // &ulPressed)) {
-    //  UpdateButton(controllerState, vrControllerState, buttonIdx, buttonMask);
-    bPressed = actionData.bActive && actionData.bState;
-    mask = (1ULL << buttonIdx);
-    controllerState.triggerValue[buttonIdx] = bPressed ? 1.0 : 0.0f;
-    if (bPressed) {
-      controllerState.buttonPressed |= mask;
-    } else {
-      controllerState.buttonPressed &= ~mask;
+    if (m_rHand[stateIndex].m_actionMenu_Pressed &&
+        vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionMenu_Pressed,
+        &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None
+        && actionData.bActive) {
+      bPressed = actionData.bState;
+      mask = (1ULL << buttonIdx);
+      controllerState.triggerValue[buttonIdx] = bPressed ? 1.0 : 0.0f;
+      if (bPressed) {
+        controllerState.buttonPressed |= mask;
+      } else {
+        controllerState.buttonPressed &= ~mask;
+      }
+    
+      if (m_rHand[stateIndex].m_actionMenu_Touched &&
+          vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionMenu_Touched,
+          &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None) {
+          bTouched = actionData.bActive && actionData.bState;
+          mask = (1ULL << buttonIdx);
+          if (bTouched) {
+            controllerState.buttonTouched |= mask;
+          } else {
+            controllerState.buttonTouched &= ~mask;
+          }
+      }
+      ++buttonIdx;
     }
-    //  }
-    //  vr::VRInputValueHandle_t ulTouched;
-    vr::VRInput()->GetDigitalActionData(
-      m_rHand[stateIndex].m_actionMenu_Touched,
-      &actionData,
-      sizeof(actionData),
-      vr::k_ulInvalidInputValueHandle);
-    // if (GetDigitalActionState(m_rHand[stateIndex].m_actionMenu_Touched,
-    // &ulTouched)) {
-    bTouched = actionData.bActive && actionData.bState;
-    mask = (1ULL << buttonIdx);
-    if (bTouched) {
-      controllerState.buttonTouched |= mask;
-    } else {
-      controllerState.buttonTouched &= ~mask;
+
+    // Button 3: System
+    if (m_rHand[stateIndex].m_actionSystem_Pressed &&
+        vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionSystem_Pressed,
+        &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None
+        && actionData.bActive) {
+      bPressed = actionData.bState;
+      mask = (1ULL << buttonIdx);
+      controllerState.triggerValue[buttonIdx] = bPressed ? 1.0 : 0.0f;
+      if (bPressed) {
+        controllerState.buttonPressed |= mask;
+      } else {
+        controllerState.buttonPressed &= ~mask;
+      }
+    
+      if (m_rHand[stateIndex].m_actionSystem_Touched &&
+          vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionSystem_Touched,
+          &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None) {
+          bTouched = actionData.bActive && actionData.bState;
+          mask = (1ULL << buttonIdx);
+          if (bTouched) {
+            controllerState.buttonTouched |= mask;
+          } else {
+            controllerState.buttonTouched &= ~mask;
+          }
+      }
+      ++buttonIdx;
     }
-    //}
-    ++buttonIdx;
+
+    // Button 4: A
+    if (m_rHand[stateIndex].m_actionA_Pressed &&
+        vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionA_Pressed,
+        &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None
+        && actionData.bActive) {
+      bPressed = actionData.bState;
+      mask = (1ULL << buttonIdx);
+      controllerState.triggerValue[buttonIdx] = bPressed ? 1.0 : 0.0f;
+      if (bPressed) {
+        controllerState.buttonPressed |= mask;
+      } else {
+        controllerState.buttonPressed &= ~mask;
+      }
+      if (m_rHand[stateIndex].m_actionA_Touched &&
+          vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionA_Touched,
+          &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None) {
+        bTouched = actionData.bActive && actionData.bState;
+        mask = (1ULL << buttonIdx);
+        if (bTouched) {
+          controllerState.buttonTouched |= mask;
+        } else {
+          controllerState.buttonTouched &= ~mask;
+        }
+      }
+      ++buttonIdx;
+    }
+    // Button 5: B
+    if (m_rHand[stateIndex].m_actionB_Pressed &&
+        vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionB_Pressed,
+        &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None
+        && actionData.bActive) {
+      bPressed = actionData.bState;
+      mask = (1ULL << buttonIdx);
+      controllerState.triggerValue[buttonIdx] = bPressed ? 1.0 : 0.0f;
+      if (bPressed) {
+        controllerState.buttonPressed |= mask;
+      } else {
+        controllerState.buttonPressed &= ~mask;
+      }
+    
+      if (m_rHand[stateIndex].m_actionB_Touched &&
+          vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionB_Touched,
+          &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None) {
+        bTouched = actionData.bActive && actionData.bState;
+        mask = (1ULL << buttonIdx);
+        if (bTouched) {
+          controllerState.buttonTouched |= mask;
+        } else {
+          controllerState.buttonTouched &= ~mask;
+        }
+      }
+      ++buttonIdx;
+    }
+    // Axis 2 3: Thumbstick
+    // Button 6: Thumbstick
+    if (m_rHand[stateIndex].m_actionThumbstick_Analog &&
+        vr::VRInput()->GetAnalogActionData( m_rHand[stateIndex].m_actionThumbstick_Analog,
+        &analogData, sizeof(analogData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None
+        && analogData.bActive) {
+      controllerState.axisValue[axisIdx] = analogData.x;
+      ++axisIdx;
+      controllerState.axisValue[axisIdx] = analogData.y * yAxisInvert;
+      ++axisIdx;
+    }
+
+    if (m_rHand[stateIndex].m_actionThumbstick_Pressed &&
+        vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionThumbstick_Pressed,
+        &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle == vr::VRInputError_None)
+        && actionData.bActive) {
+      bPressed = actionData.bState;
+      controllerState.triggerValue[buttonIdx] = bPressed ? 1.0 : 0.0f;
+      if (bPressed) {
+        controllerState.buttonPressed |= mask;
+      } else {
+        controllerState.buttonPressed &= ~mask;
+      }
+
+      if (m_rHand[stateIndex].m_actionThumbstick_Touched &&
+          vr::VRInput()->GetDigitalActionData(m_rHand[stateIndex].m_actionThumbstick_Touched,
+          &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle == vr::VRInputError_None)) {
+        bTouched = actionData.bActive && actionData.bState;
+        mask = (1ULL << buttonIdx);
+        if (bTouched) {
+          controllerState.buttonTouched |= mask;
+        } else {
+          controllerState.buttonTouched &= ~mask;
+        }
+      }
+      ++buttonIdx;
+    }
+    // Button 7: Finger index
+    if (m_rHand[stateIndex].m_actionFingerIndex_Value &&
+        vr::VRInput()->GetAnalogActionData(m_rHand[stateIndex].m_actionFingerIndex_Value,
+		&analogData, sizeof(analogData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None
+		&& analogData.bActive) {
+	  UpdateTrigger(controllerState, buttonIdx, analogData.x, triggerThreshold);
+      ++buttonIdx;
+    }
+    // Button 8: Finger middle
+    if (m_rHand[stateIndex].m_actionFingerMiddle_Value &&
+        vr::VRInput()->GetAnalogActionData(m_rHand[stateIndex].m_actionFingerMiddle_Value,
+	    &analogData, sizeof(analogData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None
+	  && analogData.bActive) {
+	  UpdateTrigger(controllerState, buttonIdx, analogData.x, triggerThreshold);
+      ++buttonIdx;
+    }
+    // Button 9: Finger ring
+    if (m_rHand[stateIndex].m_actionFingerRing_Value &&
+        vr::VRInput()->GetAnalogActionData(m_rHand[stateIndex].m_actionFingerRing_Value,
+		&analogData, sizeof(analogData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None
+		&& analogData.bActive) {
+	  UpdateTrigger(controllerState, buttonIdx, analogData.x, triggerThreshold);
+      ++buttonIdx;
+    }
+    // Button 10: Finger pinky
+    if (m_rHand[stateIndex].m_actionFingerPinky_Value &&
+        vr::VRInput()->GetAnalogActionData(m_rHand[stateIndex].m_actionFingerPinky_Value,
+		&analogData, sizeof(analogData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None
+		&& analogData.bActive) {
+	  UpdateTrigger(controllerState, buttonIdx, analogData.x, triggerThreshold);
+      ++buttonIdx;
+    }
+
+	controllerState.numButtons = buttonIdx;
+	controllerState.numAxes = axisIdx;
   }
-
-  //::vr::VRControllerState_t vrControllerState;
-  // if (mVRSystem->GetControllerState(trackedDevice, &vrControllerState,
-  // sizeof(vrControllerState))) {
-  //  uint32_t axisIdx = 0;
-  //  uint32_t buttonIdx = 0;
-  //  for (uint32_t j = 0; j < ::vr::k_unControllerStateAxisCount; ++j) {
-  //    const uint32_t axisType = mVRSystem->GetInt32TrackedDeviceProperty(
-  //                               trackedDevice,
-  //                               static_cast<::vr::TrackedDeviceProperty>(
-  //                               ::vr::Prop_Axis0Type_Int32 + j));
-  //    switch (axisType) {
-  //      case ::vr::EVRControllerAxisType::k_eControllerAxis_Joystick:
-  //      case ::vr::EVRControllerAxisType::k_eControllerAxis_TrackPad:
-  //      {
-  //        if (mIsWindowsMR) {
-  //          // Adjust the input mapping for Windows MR which has
-  //          // different order.
-  //          axisIdx = (axisIdx == 0) ? 2 : 0;
-  //          buttonIdx = (buttonIdx == 0) ? 4 : 0;
-  //        }
-
-  //        controllerState.axisValue[axisIdx] = vrControllerState.rAxis[j].x;
-  //        ++axisIdx;
-  //        controllerState.axisValue[axisIdx] = vrControllerState.rAxis[j].y *
-  //        yAxisInvert;
-  //        ++axisIdx;
-  //        uint64_t buttonMask = ::vr::ButtonMaskFromId(
-  //                             static_cast<::vr::EVRButtonId>(::vr::k_EButton_Axis0
-  //                             + j));
-
-  //        UpdateButton(controllerState, vrControllerState, buttonIdx,
-  //        buttonMask);
-  //        ++buttonIdx;
-
-  //        if (mIsWindowsMR) {
-  //          axisIdx = (axisIdx == 4) ? 2 : 4;
-  //          buttonIdx = (buttonIdx == 5) ? 1 : 2;
-  //        }
-  //        break;
-  //      }
-  //      case vr::EVRControllerAxisType::k_eControllerAxis_Trigger:
-  //      {
-  //        if (j <= 2) {
-  //          UpdateTrigger(controllerState, buttonIdx,
-  //          vrControllerState.rAxis[j].x, triggerThreshold);
-  //          ++buttonIdx;
-  //        } else {
-  //          // For SteamVR Knuckles.
-  //          UpdateTrigger(controllerState, buttonIdx,
-  //          vrControllerState.rAxis[j].x, triggerThreshold);
-  //          ++buttonIdx;
-  //          UpdateTrigger(controllerState, buttonIdx,
-  //          vrControllerState.rAxis[j].y, triggerThreshold);
-  //          ++buttonIdx;
-  //        }
-  //        break;
-  //      }
-  //    }
-  //  }
-
-  //  const uint64_t supportedButtons =
-  //  mVRSystem->GetUint64TrackedDeviceProperty(
-  //                                     trackedDevice,
-  //                                     ::vr::Prop_SupportedButtons_Uint64);
-  //  if (supportedButtons &
-  //      BTN_MASK_FROM_ID(k_EButton_A)) {
-  //    UpdateButton(controllerState, vrControllerState, buttonIdx,
-  //    BTN_MASK_FROM_ID(k_EButton_A));
-  //    ++buttonIdx;
-  //  }
-  //  if (supportedButtons &
-  //      BTN_MASK_FROM_ID(k_EButton_Grip)) {
-  //    UpdateButton(controllerState, vrControllerState, buttonIdx,
-  //    BTN_MASK_FROM_ID(k_EButton_Grip));
-  //    ++buttonIdx;
-  //  }
-  //  if (supportedButtons &
-  //      BTN_MASK_FROM_ID(k_EButton_ApplicationMenu)) {
-  //    UpdateButton(controllerState, vrControllerState, buttonIdx,
-  //    BTN_MASK_FROM_ID(k_EButton_ApplicationMenu));
-  //    ++buttonIdx;
-  //  }
-  //  if (mIsWindowsMR) {
-  //    // button 4 in Windows MR has already been assigned
-  //    // to k_eControllerAxis_TrackPad.
-  //    ++buttonIdx;
-  //  }
-  //  if (supportedButtons &
-  //      BTN_MASK_FROM_ID(k_EButton_DPad_Left)) {
-  //    UpdateButton(controllerState, vrControllerState, buttonIdx,
-  //    BTN_MASK_FROM_ID(k_EButton_DPad_Left));
-  //    ++buttonIdx;
-  //  }
-  //  if (supportedButtons &
-  //      BTN_MASK_FROM_ID(k_EButton_DPad_Up)) {
-  //    UpdateButton(controllerState, vrControllerState, buttonIdx,
-  //    BTN_MASK_FROM_ID(k_EButton_DPad_Up));
-  //    ++buttonIdx;
-  //  }
-  //  if (supportedButtons &
-  //      BTN_MASK_FROM_ID(k_EButton_DPad_Right)) {
-  //    UpdateButton(controllerState, vrControllerState, buttonIdx,
-  //    BTN_MASK_FROM_ID(k_EButton_DPad_Right));
-  //    ++buttonIdx;
-  //  }
-  //  if (supportedButtons &
-  //      BTN_MASK_FROM_ID(k_EButton_DPad_Down)) {
-  //    UpdateButton(controllerState, vrControllerState, buttonIdx,
-  //    BTN_MASK_FROM_ID(k_EButton_DPad_Down));
-  //    ++buttonIdx;
-  //  }
-  // }
-  // }
 }
 
 void
@@ -1888,7 +1777,7 @@ OpenVRSession::StartFrame(mozilla::gfx::VRSystemState& aSystemState)
     vr::VRActiveActionSet_t actionSet = {0};
     actionSet.ulActionSet = m_actionsetFirefox;
     vr::VRInput()->UpdateActionState(&actionSet, sizeof(actionSet), 1);
-  
+	
     UpdateControllerButtons(aSystemState);
     UpdateControllerPoses(aSystemState);
   } else {
