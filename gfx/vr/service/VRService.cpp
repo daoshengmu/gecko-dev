@@ -174,9 +174,14 @@ bool VRService::InitShmem() {
         TEXT("mozilla::vr::ShmemMutex"));  // object name
 
     if (mMutex == NULL) {
-      nsAutoCString msg("VRService OpenMutex error \"%lu\".",
-                        GetLastError());
+      // nsAutoCString msg("VRService OpenMutex error \"%lu\".",
+      //                   GetLastError());
+      // NS_WARNING(msg.get());
+      nsAutoCString msg;
+      msg.AppendPrintf("VRService OpenMutex error \"%lu\".",
+                       GetLastError());
       NS_WARNING(msg.get());
+      printf_stderr("stderr: VRService OpenMutex error %lu\n", GetLastError());
       MOZ_ASSERT(false);
       return false;
     }
