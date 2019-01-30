@@ -455,7 +455,7 @@ void VRSystemManagerExternal::OpenShmem() {
         TEXT("mozilla::vr::ShmemMutex"));  // object name
 
     if (mMutex == NULL) {
-      nsAutoCString msg("VRService CreateMutex error \"%lu\".",
+      nsAutoCString msg("VRSystemManagerExternal CreateMutex error \"%lu\".",
                         GetLastError());
       NS_WARNING(msg.get());
       MOZ_ASSERT(false);
