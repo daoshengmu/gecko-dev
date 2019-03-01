@@ -116,6 +116,7 @@ VRManager::~VRManager() {
 }
 
 void VRManager::Destroy() {
+  mInitialized = false;
   StopTasks();
   mVRDisplays.Clear();
   mVRControllers.Clear();
@@ -128,7 +129,6 @@ void VRManager::Destroy() {
   }
 #endif
   Shutdown();
-  mInitialized = false;
 }
 
 void VRManager::Shutdown() {
@@ -239,6 +239,9 @@ void VRManager::StopTasks() {
 }
 
 void VRManager::RunTasks() {
+  if (!mInitialized) {
+    return;
+  }
   // Will be called once every 1ms when a VR presentation
   // is active or once per vsync when a VR presentation is
   // not active.
