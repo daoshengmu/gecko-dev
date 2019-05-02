@@ -1269,12 +1269,12 @@ void gfxPlatform::ShutdownLayersIPC() {
   sLayersIPCIsUp = false;
 
   if (XRE_IsContentProcess()) {
-    gfx::VRManagerChild::ShutDown();
     // cf bug 1215265.
     if (gfxPrefs::ChildProcessShutdown()) {
       layers::CompositorManagerChild::Shutdown();
       layers::ImageBridgeChild::ShutDown();
     }
+    gfx::VRManagerChild::ShutDown();
 
     if (gfxVars::UseOMTP() && !recordreplay::IsRecordingOrReplaying()) {
       layers::PaintThread::Shutdown();
@@ -1283,8 +1283,8 @@ void gfxPlatform::ShutdownLayersIPC() {
 #ifdef MOZ_WAYLAND
     widget::WaylandDisplayShutdown();
 #endif
-    gfx::VRManagerChild::ShutDown();
     layers::CompositorManagerChild::Shutdown();
+    gfx::VRManagerChild::ShutDown();
     layers::ImageBridgeChild::ShutDown();
     // This has to happen after shutting down the child protocols.
     layers::CompositorThreadHolder::Shutdown();
