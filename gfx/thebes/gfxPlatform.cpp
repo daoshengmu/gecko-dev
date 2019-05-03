@@ -1274,11 +1274,11 @@ void gfxPlatform::ShutdownLayersIPC() {
       layers::CompositorManagerChild::Shutdown();
       layers::ImageBridgeChild::ShutDown();
     }
-    gfx::VRManagerChild::ShutDown();
 
     if (gfxVars::UseOMTP() && !recordreplay::IsRecordingOrReplaying()) {
       layers::PaintThread::Shutdown();
     }
+    gfx::VRManagerChild::ShutDown();
   } else if (XRE_IsParentProcess()) {
 #ifdef MOZ_WAYLAND
     widget::WaylandDisplayShutdown();
