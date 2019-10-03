@@ -82,7 +82,7 @@
 #include "nsTransitionManager.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
-#  include "VRManager.h"
+#  include "VRManagerChild.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
 #ifdef MOZ_XUL
@@ -1814,7 +1814,12 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     return;
   }
 
-  if (IsWaitingForPaint(aNowTime)) {
+  bool skipPaint = false;
+#if defined(MOZ_WIDGET_ANDROID)
+  skipPaint = gfx::VRManagerChild::IsPresenting();
+#endif // defined(MOZ_WIDGET_ANDROID)
+
+  if (!skipPaint && IsWaitingForPaint(aNowTime)) {
     // We're currently suspended waiting for earlier Tick's to
     // be completed (on the Compositor). Mark that we missed the paint
     // and keep waiting.
@@ -2130,11 +2135,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
 
     mViewManagerFlushIsPending = false;
     RefPtr<nsViewManager> vm = mPresContext->GetPresShell()->GetViewManager();
-    bool skipPaint = false;
-#if defined(MOZ_WIDGET_ANDROID)
-    gfx::VRManager* vrm = gfx::VRManager::Get();
-    skipPaint = vrm->IsPresenting();
-#endif // defined(MOZ_WIDGET_ANDROID)
     if (!skipPaint) {
       PaintTelemetry::AutoRecordPaint record;
       vm->ProcessPendingUpdates();
