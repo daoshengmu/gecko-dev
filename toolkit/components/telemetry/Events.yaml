@@ -1769,6 +1769,7 @@ security.ui.permissionprompt:
     objects: [
       "notifications",
       "geo",
+      "xr",
     ]
     bug_numbers:
       - 1536454

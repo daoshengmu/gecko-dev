@@ -157,7 +157,6 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 
 <!ENTITY urlbar.permissionsGranted.tooltip       "You have granted this website additional permissions.">
 
-
 <!ENTITY urlbar.openHistoryPopup.tooltip                "Show history">
 
 <!ENTITY searchItem.title             "Search">
