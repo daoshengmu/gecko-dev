@@ -816,10 +816,14 @@ void VRManager::ProcessManagerState_DetectRuntimes() {
      * deprecated and removed.
      */
     mState = VRManagerState::Stopping;
-    mRuntimeSupportFlags = mDisplayInfo.mDisplayState.capabilityFlags &
-                           (VRDisplayCapabilityFlags::Cap_ImmersiveVR |
-                            VRDisplayCapabilityFlags::Cap_ImmersiveAR |
-                            VRDisplayCapabilityFlags::Cap_Inline);
+    // Add `volatile` to avoid compilers' optimization to make
+    // this bitwise doesn't work.
+    volatile VRDisplayCapabilityFlags result =
+        mDisplayInfo.mDisplayState.capabilityFlags &
+        (VRDisplayCapabilityFlags::Cap_ImmersiveVR |
+         VRDisplayCapabilityFlags::Cap_ImmersiveAR |
+         VRDisplayCapabilityFlags::Cap_Inline);
+    mRuntimeSupportFlags = result;
     mRuntimeDetectionCompleted = true;
     DispatchRuntimeCapabilitiesUpdate();
   }
