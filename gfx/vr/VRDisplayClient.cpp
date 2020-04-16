@@ -41,7 +41,7 @@ VRDisplayClient::VRDisplayClient(const VRDisplayInfo& aDisplayInfo)
       mLastEventFrameId(0),
       mLastPresentingGeneration(0),
       mLastEventControllerState{},
-      mAPIMode(VRAPIMode::WebXR) {
+      mAPIMode(VRAPIMode::WebVR) {
   MOZ_COUNT_CTOR(VRDisplayClient);
 }
 
