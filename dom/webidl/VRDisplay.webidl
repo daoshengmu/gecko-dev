@@ -189,6 +189,17 @@ interface VREyeParameters {
   [Constant] readonly attribute unsigned long renderHeight;
 };
 
+[Pref="dom.vr.puppet.enabled",
+ HeaderFile="mozilla/dom/VRDisplay.h",
+ SecureContext,
+ Exposed=Window]
+interface VRSubmitFrameResult {
+  [Throws]
+  constructor();
+  readonly attribute unsigned long frameNum;
+  readonly attribute DOMString? base64Image;
+};
+
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h",
  SecureContext,
@@ -247,6 +258,9 @@ interface VRDisplay : EventTarget {
    * the current frame.
    */
   boolean getFrameData(VRFrameData frameData);
+
+  [Pref="dom.vr.puppet.enabled"]
+  boolean getSubmitFrameResult(VRSubmitFrameResult result);
 
   /**
    * Return a VRPose containing the future predicted pose of the VRDisplay
