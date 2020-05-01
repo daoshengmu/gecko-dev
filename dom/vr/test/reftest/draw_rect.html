@@ -42,19 +42,21 @@ If this fails, something is seriously wrong. -->
         return;
       }
 
-      VRSimulationDriver.AttachWebVRDisplay().then(() => {
+      VRSimulationDriver.AttachWebVRDisplay();
+
+      // VRSimulationDriver.AttachWebVRDisplay().then(() => {
         // Looking for VR displays
-        if (navigator.getVRDisplays) {
-          submitResult = new VRSubmitFrameResult();
-          navigator.getVRDisplays().then(function (displays) {
-            if (displays.length > 0) {
-              vrDisplay = displays[0];
-              vrDisplay.requestPresent([{ source: webglCanvas }]);
-              vrDisplay.requestAnimationFrame(onAnimationFrame);
-            }
-          });
-        }
-      });
+      if (navigator.getVRDisplays) {
+        submitResult = new VRSubmitFrameResult();
+        navigator.getVRDisplays().then(function (displays) {
+          if (displays.length > 0) {
+            vrDisplay = displays[0];
+            vrDisplay.requestPresent([{ source: webglCanvas }]);
+            vrDisplay.requestAnimationFrame(onAnimationFrame);
+          }
+        });
+      }
+      // });
     }
 
     function onAnimationFrame() {

@@ -575,6 +575,7 @@ void VRDisplayClient::UpdateSubmitFrameResult(
 }
 
 void VRDisplayClient::GetSubmitFrameResult(VRSubmitFrameResultInfo& aResult) {
+  printf_stderr("VRDisplayClient::GetSubmitFrameResult...\n");
   aResult = mSubmitFrameResult;
 }
 

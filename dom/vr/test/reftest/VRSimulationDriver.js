@@ -8,14 +8,15 @@ var VRSimulationDriver = (function() {
 var AttachWebVRDisplay = function() {
   if (vrMockDisplay) {
     // Avoid creating multiple displays
-    return Promise.resolve(vrMockDisplay);
+    return vrMockDisplay; //Promise.resolve(vrMockDisplay);
   }
-  var promise = VRServiceTest.attachVRDisplay("VRDisplayTest");
-  promise.then(function (display) {
-    vrMockDisplay = display;
-  });
+  // var promise = VRServiceTest.attachVRDisplay("VRDisplayTest");
+  // promise.then(function (display) {
+  //   vrMockDisplay = display;
+  // });
+  vrMockDisplay = VRServiceTest.getVRDisplay();
 
-  return promise;
+  // return promise;
 };
 
 var SetVRDisplayPose = function(position,
